@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>  
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="Portfolio.css">
+        <title>Yejun Kim</title>
+    </head>
+    <body>
+        <header class="top-container">
+            <div class="top-links">
+                <a href="index.html">Home</a>
+            </div>
+            <div class="top-links">
+                <a href="index.html#Exp">Experience</a>
+            </div>
+            <div class="top-links">
+                <a href="index.html#Proj">Projects</a>
+            </div>
+            <div class="top-links">
+                <a href="index.html#Cont">Contact</a>
+            </div>
+        </header>
+        <section class="pdf">
+            <div class="pdftitle">MARRS Capstone Project Technical Report</div>
+            <embed src="RASC_AL_Capstone_Project.pdf" type="application/pdf" width=80%, height="900px">
+        </section>
+        <script>
+            window.addEventListener("scroll", function() {
+                let header = document.querySelector("header");
+                if (window.scrollY > 50) {
+                    header.classList.add("shrink");
+                } else {
+                    header.classList.remove("shrink");
+                }
+            });
+        </script>
+    </body>
+</html>

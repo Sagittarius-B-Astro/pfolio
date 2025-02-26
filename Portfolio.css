@@ -12,7 +12,7 @@ html {
 
 body {
     margin: 0;
-    font-family: "San-serif";
+    font-family: 'Baskervville';
 }
 
 header {
@@ -48,7 +48,7 @@ header.shrink {
 
 .top-links a {
     color: #fce7c8;
-    font-family: 'Source Sans Pro', sans-serif;
+    font-family: 'Baskervville', sans-serif;
     font-size: 18px;
     font-weight: bold;
     text-decoration: none;
@@ -62,7 +62,7 @@ header.shrink {
 
 .Home {
     padding-top: 60px;
-    font-family: 'Source Sans Pro', sans-serif;
+    font-family: 'Baskervville', sans-serif;
     width: 100%;
     background-color: #b1c29e;
     display: flex;
@@ -117,9 +117,9 @@ header.shrink {
 
 .preamble {
     color: #fce7c8;
-    text-align: left;
+    text-align: center;
     font-size: 20px;
-    padding: 80px;
+    padding: 140px;
     padding-top: 30px;
     display: flex;
     justify-content: center;
@@ -139,7 +139,7 @@ header.shrink {
 }
 
 .Homeright {
-    width: 30%;
+    width: 25%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -187,7 +187,7 @@ header.shrink {
 }
 
 .Experience {
-    font-family: 'Source Sans Pro', sans-serif;
+    font-family: 'Baskervville', sans-serif;
     width: 100%;
     background-color: #b1c29e;
     display: flex;
@@ -308,7 +308,7 @@ header.shrink {
 }
 
 .Projects {
-    font-family: 'Source Sans Pro', sans-serif;
+    font-family: 'Baskervville', sans-serif;
     width: 100%;
     background-color: #b1c29e;
     display: flex;
@@ -385,7 +385,7 @@ header.shrink {
     border-radius: 10px;
     width: 380px;
     border: 2px #fada7a;
-    height: 380px;
+    height: 400px;
     display: flex;
     flex-direction: column;
     border: 2px solid #fce7c8;
@@ -439,8 +439,8 @@ header.shrink {
 }
 
 .QandA {
-    padding-top: 200px;
-    font-family: 'Source Sans Pro', sans-serif;
+    padding-top: 230px;
+    font-family: 'Baskervville', sans-serif;
     width: 100%;
     background-color: #b1c29e;
     display: flex;
@@ -491,7 +491,7 @@ header.shrink {
 
 .pdf {
     padding: 200px;
-    font-family: 'Source Sans Pro', sans-serif;
+    font-family: 'Baskervville', sans-serif;
     width: 100%;
     background-color: #b1c29e;
     display: flex;
