@@ -20,7 +20,7 @@ header {
     top: 0;
     left: 0;
     width: 100%;
-    background-color: #b1c29e;
+    background-color: #8fa481;
     z-index: 1000;
     padding: 10px 0;
     transition: all 0.3s ease-in-out;
@@ -28,12 +28,12 @@ header {
 
 header.shrink {
     padding: 5px 0;
-    background-color: #a5b898;
+    background-color: rgb(95, 111, 78);
 }
 
 .top-container {
     padding: 10px;
-    background-color: #b1c29e;
+    background-color: #8fa481;
 }
 
 .top-links {
@@ -64,7 +64,7 @@ header.shrink {
     padding-top: 60px;
     font-family: 'Baskervville', sans-serif;
     width: 100%;
-    background-color: #b1c29e;
+    background-color: #8fa481;
     display: flex;
     height: 750px
 }
@@ -93,7 +93,7 @@ header.shrink {
 }
 
 .name {
-    background: linear-gradient(90deg, #fce7c8, #b1c29e);
+    background: linear-gradient(90deg, #fce7c8, #8fa481);
     background-size: 200% 100%;
     -webkit-background-clip: text;
     animation: drawText 2s ease-in-out forwards;
@@ -173,6 +173,10 @@ header.shrink {
     color: #cad315;
 }
 
+.icon:hover .icon-text{
+    opacity: 1
+}
+
 .profpic {
     display: flex;
     justify-content: center;
@@ -189,7 +193,7 @@ header.shrink {
 .Experience {
     font-family: 'Baskervville', sans-serif;
     width: 100%;
-    background-color: #b1c29e;
+    background-color: #8fa481;
     display: flex;
     flex-direction: column;
 }
@@ -200,7 +204,7 @@ header.shrink {
     justify-content: center;
     align-items: center;
     font-weight: bold;
-    color: #fce7c8;
+    color: #fada7a;
     opacity: 0;
     transition: opacity 1.5s ease-in-out;
 }
@@ -295,7 +299,7 @@ header.shrink {
     top: 10px;
     width: 15px;
     height: 15px;
-    background-color: #b1c29e;
+    background-color: #8fa481;
     border-radius: 50%;
 }
 
@@ -310,7 +314,7 @@ header.shrink {
 .Projects {
     font-family: 'Baskervville', sans-serif;
     width: 100%;
-    background-color: #b1c29e;
+    background-color: #8fa481;
     display: flex;
     flex-direction: column;
 }
@@ -321,7 +325,7 @@ header.shrink {
     justify-content: center;
     align-items: center;
     font-weight: bold;
-    color: #fce7c8;
+    color: #fada7a;
     opacity: 0;
     transition: opacity 1.5s ease-in-out;
 }
@@ -384,11 +388,10 @@ header.shrink {
 .projectdiv {
     border-radius: 10px;
     width: 380px;
-    border: 2px #fada7a;
     height: 400px;
     display: flex;
     flex-direction: column;
-    border: 2px solid #fce7c8;
+    border: 2px solid #fada7a;
     padding: 40px;
     transition: transform 0.2s ease-in-out;
 }
@@ -442,7 +445,7 @@ header.shrink {
     padding-top: 230px;
     font-family: 'Baskervville', sans-serif;
     width: 100%;
-    background-color: #b1c29e;
+    background-color: #8fa481;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -467,7 +470,7 @@ header.shrink {
     border-radius: 30px;
     border: 2px solid #fada7a;
     margin-bottom: 300px;
-    color: #b1c29e;
+    color: #8fa481;
     background-color: #fada7a;
 }
 
@@ -493,7 +496,7 @@ header.shrink {
     padding: 200px;
     font-family: 'Baskervville', sans-serif;
     width: 100%;
-    background-color: #b1c29e;
+    background-color: #8fa481;
     display: flex;
     flex-direction: column;
     justify-content: center;
