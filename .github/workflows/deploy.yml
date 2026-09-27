@@ -1,0 +1,34 @@
+name: Deploy site with injected Firebase config
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy site into build folder
+        run: |
+          mkdir -p build
+          rsync -a --exclude build --exclude .git --exclude .github --exclude node_modules ./ build/
+
+      - name: Substitute Firebase config placeholders
+        run: |
+          sed -i \
+            -e "s|__FIREBASE_API_KEY__|${{ secrets.FIREBASE_API_KEY }}|g" \
+            -e "s|__FIREBASE_AUTH_DOMAIN__|${{ secrets.FIREBASE_AUTH_DOMAIN }}|g" \
+            -e "s|__FIREBASE_DATABASE_URL__|${{ secrets.FIREBASE_DATABASE_URL }}|g" \
+            -e "s|__FIREBASE_PROJECT_ID__|${{ secrets.FIREBASE_PROJECT_ID }}|g" \
+            -e "s|__FIREBASE_APP_ID__|${{ secrets.FIREBASE_APP_ID }}|g" \
+            build/pomodoro.js
+
+      - name: Deploy build folder to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build
