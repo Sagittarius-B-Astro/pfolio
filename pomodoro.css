@@ -1,0 +1,312 @@
+:root {
+    --sage: #8fa481;
+    --sage-dark: #5f6f4e;
+    --cream: #fce7c8;
+    --gold: #fada7a;
+    --navy: #394d6c;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Baskervville', serif;
+    background-color: var(--sage);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.pomodoro-wrapper {
+    width: 100%;
+    max-width: 900px;
+}
+
+.pomodoro-card {
+    width: 100%;
+    gap: 30px;
+}
+
+.pomodoro-title {
+    width: 100%;
+    text-align: center;
+    font-size: 48px;
+    font-weight: bold;
+    color: var(--gold);
+}
+
+/* ---------- Left / Right row ---------- */
+
+.pomodoro-main {
+    display: flex;
+    width: 100%;
+    gap: 30px;
+}
+
+.timer-box,
+.checklist-box {
+    flex: 1 1 0;
+    border-radius: 10px;
+    border: 2px solid black;
+    background-color: var(--navy);
+    color: var(--cream);
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Left box is a square; the row stretches the right box to match its height */
+.timer-box {
+    aspect-ratio: 1 / 1;
+}
+
+.timer-display {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 56px;
+    font-weight: bold;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+}
+
+.timer-controls {
+    display: flex;
+    width: 100%;
+}
+
+.control-cell {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-btn {
+    min-width: 110px;
+    height: 50px;
+    border-radius: 25px;
+    border: 2px solid var(--gold);
+    background-color: var(--gold);
+    color: var(--sage-dark);
+    font-family: 'Baskervville', serif;
+    font-weight: bold;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.2s ease, background-color 0.3s ease, opacity 0.2s ease;
+}
+
+.control-btn:hover:not(:disabled) {
+    cursor: pointer;
+    transform: scale(1.05);
+    background-color: rgba(255, 255, 255, 0.85);
+}
+
+.control-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+/* ---------- Checklist ---------- */
+
+.checklist-header {
+    text-align: center;
+    font-size: 26px;
+    font-weight: bold;
+    color: var(--gold);
+    margin-bottom: 14px;
+}
+
+.task-entry {
+    margin-bottom: 14px;
+}
+
+.task-input {
+    font-family: 'Baskervville', serif;
+    font-size: 16px;
+    background-color: var(--cream);
+    color: var(--sage-dark);
+    border: none;
+}
+
+.task-input::placeholder {
+    color: rgba(95, 111, 78, 0.55);
+    font-style: italic;
+}
+
+.task-input:focus {
+    box-shadow: 0 0 0 3px rgba(250, 218, 122, 0.5);
+}
+
+.task-list {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.task-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.task-list::-webkit-scrollbar-thumb {
+    background-color: var(--gold);
+    border-radius: 4px;
+}
+
+.task-list::-webkit-scrollbar-track {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px 10px;
+    flex-shrink: 0;
+}
+
+.task-item.completed .task-text {
+    text-decoration: line-through;
+    opacity: 0.55;
+}
+
+.task-check-btn,
+.task-cancel-btn {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid var(--cream);
+    background: transparent;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.task-check-btn:hover,
+.task-item.completed .task-check-btn {
+    background-color: var(--sage);
+}
+
+.task-cancel-btn:hover {
+    background-color: #b33a3a;
+    border-color: #b33a3a;
+}
+
+.task-text {
+    flex: 1;
+    min-width: 0;
+    font-size: 16px;
+    background: transparent;
+    border: none;
+    color: var(--cream);
+    font-family: 'Baskervville', serif;
+}
+
+.task-text:focus {
+    outline: none;
+}
+
+/* ---------- Weekly summary ---------- */
+
+.pomodoro-summary {
+    width: 60%;
+    background-color: rgba(0, 0, 0, 0.15);
+    border: 2px solid var(--gold);
+    border-radius: 10px;
+    padding: 20px;
+    color: var(--cream);
+}
+
+.summary-title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--gold);
+    margin-bottom: 12px;
+}
+
+.summary-metrics {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 14px;
+}
+
+.metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.metric-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--gold);
+}
+
+.metric-label {
+    font-size: 13px;
+}
+
+.summary-list {
+    max-height: 120px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.summary-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.summary-list::-webkit-scrollbar-thumb {
+    background-color: var(--gold);
+    border-radius: 3px;
+}
+
+.summary-item {
+    font-size: 14px;
+    padding: 5px 10px;
+    background-color: rgba(255, 255, 255, 0.07);
+    border-radius: 6px;
+}
+
+.summary-empty {
+    font-size: 14px;
+    text-align: center;
+    opacity: 0.6;
+    padding: 8px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 700px) {
+    .pomodoro-main {
+        flex-direction: column;
+    }
+    .timer-box {
+        aspect-ratio: auto;
+        height: 340px;
+    }
+    .pomodoro-summary {
+        width: 100%;
+    }
+}
