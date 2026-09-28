@@ -91,9 +91,13 @@ body {
     flex-direction: column;
 }
 
-/* Left box is a square; the row stretches the right box to match its height */
-.timer-box {
+/* Both boxes are squares of the same width, so the checklist can never grow taller
+   than the timer box - a long task list scrolls inside .task-list instead. */
+.timer-box,
+.checklist-box {
     aspect-ratio: 1 / 1;
+    min-width: 0;   /* keep the two columns exactly equal whatever their contents */
+    min-height: 0;
 }
 
 .timer-display {
@@ -180,6 +184,7 @@ body {
 
 .task-list {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding-right: 6px;
     display: flex;
@@ -245,11 +250,26 @@ body {
 .task-text {
     flex: 1;
     min-width: 0;
+    display: block;
+    margin: 0;
+    padding: 2px 0;
     font-size: 16px;
+    line-height: 1.3;
     background: transparent;
     border: none;
     color: var(--cream);
     font-family: 'Baskervville', serif;
+    resize: none;          /* height is set automatically by pomodoro.js */
+    overflow: hidden;
+}
+
+.task-text::-webkit-scrollbar {
+    width: 6px;
+}
+
+.task-text::-webkit-scrollbar-thumb {
+    background-color: var(--gold);
+    border-radius: 3px;
 }
 
 .task-text:focus {
@@ -334,9 +354,17 @@ body {
     .pomodoro-main {
         flex-direction: column;
     }
-    .timer-box {
+    .timer-box,
+    .checklist-box {
+        flex: none;          /* stacked in a column: use the explicit heights below */
+        width: 100%;
         aspect-ratio: auto;
+    }
+    .timer-box {
         height: 340px;
+    }
+    .checklist-box {
+        height: 420px;
     }
     .pomodoro-summary {
         width: 100%;
