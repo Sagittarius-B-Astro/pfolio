@@ -1,11 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    /* ===================== FIREBASE-SYNCED TIMER ===================== */
-
-    // These placeholders get swapped for real values at deploy time
-    // by the GitHub Actions workflow. They are NOT real secrets - a
-    // Firebase web config is meant to be public; access is controlled
-    // by the Realtime Database security rules, not by hiding this file.
     const firebaseConfig = {
         apiKey: "__FIREBASE_API_KEY__",
         authDomain: "__FIREBASE_AUTH_DOMAIN__",
@@ -14,18 +8,49 @@ document.addEventListener("DOMContentLoaded", function () {
         appId: "__FIREBASE_APP_ID__"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const stateRef = firebase.database().ref("pomodoroState");
+    function createLocalRef() {
+        let value = null;
+        const listeners = [];
+        const snap = () => ({ val: () => (value === null ? null : { ...value }) });
+        return {
+            set(v) {
+                value = { ...v };
+                listeners.forEach((cb) => cb(snap()));
+                return Promise.resolve();
+            },
+            on(_event, cb) {
+                listeners.push(cb);
+                setTimeout(() => cb(snap()), 0);
+            }
+        };
+    }
 
-    const DURATION = 25 * 60; // 25 minutes, in seconds
+    const firebaseConfigured =
+        typeof firebase !== "undefined" &&
+        Object.values(firebaseConfig).every((v) => v && !v.startsWith("__"));
+
+    let stateRef = null;
+    if (firebaseConfigured) {
+        try {
+            firebase.initializeApp(firebaseConfig);
+            stateRef = firebase.database().ref("pomodoroState");
+        } catch (err) {
+            console.error("Firebase failed to initialize:", err);
+        }
+    }
+    if (!stateRef) {
+        console.warn("Firebase not configured - running the timer in local-only mode.");
+        stateRef = createLocalRef();
+    }
+
+    const DURATION = 25 * 60;
 
     const timerDisplay = document.getElementById("timerDisplay");
     const toggleBtn = document.getElementById("toggleBtn");
     const resetBtn = document.getElementById("resetBtn");
 
-    // Local mirror of the shared state
     let remoteState = { running: false, endTime: null, remaining: DURATION };
-    let sessionCounted = false; // guards against double-counting a finished session
+    let sessionCounted = false;
 
     function formatTime(totalSeconds) {
         const s = Math.max(0, Math.round(totalSeconds));
@@ -45,7 +70,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const left = secondsLeft();
         timerDisplay.textContent = formatTime(left);
 
-        // Only touch the DOM when the running state actually flips
         const runningKey = remoteState.running ? "running" : "paused";
         if (toggleBtn.dataset.state !== runningKey) {
             toggleBtn.dataset.state = runningKey;
@@ -57,16 +81,13 @@ document.addEventListener("DOMContentLoaded", function () {
         if (remoteState.running && left <= 0 && !sessionCounted) {
             sessionCounted = true;
             recordFocusedMinutes(DURATION / 60);
-            // Freeze at 0; next Play press starts a fresh 25 minutes.
             stateRef.set({ running: false, endTime: null, remaining: 0 });
         }
     }
 
-    // Listen for state changes from ANY user (including yourself)
     stateRef.on("value", (snapshot) => {
         const data = snapshot.val();
         if (!data) {
-            // First-ever load: seed the shared state
             stateRef.set({ running: false, endTime: null, remaining: DURATION });
             return;
         }
@@ -75,16 +96,12 @@ document.addEventListener("DOMContentLoaded", function () {
         renderTimer();
     });
 
-    // Smooth local countdown between remote updates - purely visual,
-    // does not write to the database.
     setInterval(renderTimer, 250);
 
     toggleBtn.addEventListener("click", () => {
         if (remoteState.running) {
-            // Pause: freeze whatever time is left
             stateRef.set({ running: false, endTime: null, remaining: secondsLeft() });
         } else {
-            // Play: resume from remaining time, or start fresh if it hit 0
             const left = remoteState.remaining || DURATION;
             const remaining = left > 0 ? left : DURATION;
             const endTime = Date.now() + remaining * 1000;
@@ -93,7 +110,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     resetBtn.addEventListener("click", () => {
-        // Back to a full, paused 25:00 for everyone
         stateRef.set({ running: false, endTime: null, remaining: DURATION });
     });
 
@@ -182,9 +198,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     renderTasks();
-
-
-    /* ===================== WEEKLY SUMMARY (per-browser) ===================== */
 
     const weekTimeEl = document.getElementById("weekTime");
     const weekCountEl = document.getElementById("weekCount");
