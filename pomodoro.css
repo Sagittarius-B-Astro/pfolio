@@ -32,11 +32,43 @@ body {
 }
 
 .pomodoro-title {
+    position: relative;
     width: 100%;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
     font-size: 48px;
     font-weight: bold;
     color: var(--gold);
+    padding-bottom: 24px;
+    margin-bottom: 20px; /* extra space on top of the card's 30px gap */
+}
+
+/* Fading divider line under the title */
+.pomodoro-title::after {
+    content: "";
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.title-heart {
+    font-size: 0.6em;
+    color: #e58a8a;
+    animation: heartbeat 1.6s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.18); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .title-heart { animation: none; }
 }
 
 /* ---------- Left / Right row ---------- */
