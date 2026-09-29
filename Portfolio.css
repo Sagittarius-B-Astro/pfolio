@@ -466,7 +466,7 @@ header.shrink {
 
 .Projects-container {
     padding-top: 50px;
-    max-height: 600px; 
+    max-height: 800px; 
     width: 100%;
     gap: 60px;
     display: flex;
@@ -477,8 +477,8 @@ header.shrink {
 
 .projectdiv {
     border-radius: 10px;
-    width: 380px;
-    height: 400px;
+    width: 500px;
+    height: 560px;
     display: flex;
     flex-direction: column;
     border: 2px solid #fada7a;
