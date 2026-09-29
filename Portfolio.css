@@ -66,7 +66,7 @@ header.shrink {
     width: 100%;
     background-color: #8fa481;
     display: flex;
-    min-height: 100vh;
+    min-height: 50vh;
 }
 
 .Homeleft {
@@ -188,6 +188,95 @@ header.shrink {
     height: 300px;
     border-radius: 50%;
     border: 5px solid #fada7a;
+}
+
+.Resumes {
+    font-family: 'Baskervville', sans-serif;
+    width: 100%;
+    background-color: #8fa481;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 0 80px;
+    min-height: 50vh;
+}
+
+.Resumetitle {
+    font-size: 40px;
+    font-weight: bold;
+    color: #fada7a;
+    padding-bottom: 40px;
+}
+
+.Resume-container {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    width: 100%;
+}
+
+.resume-link {
+    text-decoration: none;
+    color: inherit;
+    display: inline-block;
+}
+
+.resumecard {
+    width: 300px;
+    height: 240px;
+    border-radius: 10px;
+    border: 2px solid #fada7a;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    text-align: center;
+    transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+.resumecard:hover {
+    transform: scale(1.05);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.resumecard > i {
+    font-size: 36px;
+    color: #fce7c8;
+    transition: transform 0.5s ease-in-out;
+}
+
+.resumecard:hover > i {
+    transform: rotate(360deg);
+}
+
+.resumelabel {
+    font-size: 25px;
+    font-weight: bold;
+    color: #fce7c8;
+}
+
+@media (max-width: 1000px) {
+    .Resume-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
+    }
+}
+
+.Resumetitle,
+.Resume-container {
+    opacity: 0;
+    animation: fadeIn 1.5s ease-in-out forwards;
+}
+
+.Resumetitle {
+    animation-delay: 0.5s;
+}
+
+.Resume-container {
+    animation-delay: 1s;
 }
 
 .Experience {
