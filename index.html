@@ -50,19 +50,19 @@
         <section class="Resumes">
             <div class="Resumetitle">Resumes</div>
             <div class="Resume-container">
-                <a href="PDFs/SWE Resume.pdf" target="_blank" class="resume-link">
+                <a href="PDFs/SWE Resume.pdf" class="resume-link">
                     <div class="resumecard">
                         <i class="fas fa-laptop-code"></i>
                         <div class="resumelabel">Software Engineering</div>
                     </div>
                 </a>
-                <a href="PDFs/Mechanical Resume.pdf" target="_blank" class="resume-link">
+                <a href="PDFs/Mechanical Resume.pdf" class="resume-link">
                     <div class="resumecard">
                         <i class="fas fa-gears"></i>
                         <div class="resumelabel">Mechanical Engineering</div>
                     </div>
                 </a>
-                <a href="PDFs/GNC Resume.pdf" target="_blank" class="resume-link">
+                <a href="PDFs/GNC Resume.pdf" class="resume-link">
                     <div class="resumecard">
                         <i class="fas fa-rocket"></i>
                         <div class="resumelabel">Guidance, Navigation &amp; Controls</div>
@@ -97,9 +97,9 @@
                         </div>
                         <div class="workinfo">
                             <ul>
-                                <li>Assessed risk of failure and damages for calculation of premium fees for engineering systems</li>
-                                <li>Coded VBA macro in Excel that converted units of time for parameters of failure distributions</li>
-                                <li>Used Reliasoft Weibull++ to estimate lifetime of components using Weibull, Exp, Log distributions</li>
+                                <li>Modeled equipment failure using Weibull, exponential, and lognormal probability distributions to evaluate reliability and operational risk.</li>
+                                <li>Automated reliability calculations and statistical analyses in Excel using VBA, reducing manual computation for recurring engineering assessments.</li>
+                                <li>Interpreted reliability metrics and communicated quantitative findings to support engineering risk management decisions.</li>
                             </ul>
                         </div>
                     </div>
@@ -216,8 +216,10 @@
                         </div>
                         <div class="projtitle">Mars Airborne Residue Remediation System - Electrical, Software and Controls Lead</div>
                         <div class="projblurb">
-                            In my Capstone Project, we test an electrostatic precipitator (EP) as a means of 
-                            removing Martian dust from suits and equipment. I primarily investigated the electrical requirements of the EP.
+                            Our Capstone Project tests the effectiveness of an electrostatic precipitator (EP) as a means of Martian dust remediation,
+                            removing particles from suits and equipment. This technology is designed to be integrated into extraterrestrial habitats.
+                            My role was to lead the electrical, software, and controls team, which designed the EP's control system and developed a GUI 
+                            for testing and data collection, made visible in the official Capstone Project Technical Report.
                         </div>
                     </div>
                 </a>
@@ -228,8 +230,10 @@
                         </div>
                         <div class="projtitle">Orbital Transfer Calculator</div>
                         <div class="projblurb">
-                            This calculator asks for parameters for the Hohmann, Bi-Elliptic Hohmann, Common Apse Line, Apse Line Rotation, and
-                            Plane Change transfers, and visualizes the initial, target and transit trajectories on an embedded Desmos Calculator.
+                            The OTC implements a user-friendly interface to calculate orbital transfers, asking for parameters for the Hohmann, 
+                            Bi-Elliptic Hohmann, Common Apse Line, Apse Line Rotation, and Plane Change transfers. Upon calculation, it displays the results 
+                            and visualizes the initial, target and transit trajectories on an embedded Desmos Calculator. Technical documentation attached 
+                            to the project provides a detailed explanation of the calculations and assumptions made in the code [TBD]
                         </div>
                     </div>
                 </a>
@@ -240,13 +244,13 @@
                         </div>
                         <div class="projtitle">Options Pricing and Greeks Calculator</div>
                         <div class="projblurb">
-                            Using streamlit, seaborn, matplotlib, this online app allows the user to calculate the ideal price for a call and put
-                            given various user inputs, as well as the calculation of the implied volatility, and every Greek I could find. 
+                            This streamlit application uses pandas, seaborn, and matplotlib to allow the user to calculate the ideal price for a call and put
+                            given various user inputs (Price of Option, Current Asset Price, Strike Price, Time to Maturity, Risk-Free Interest Rate, Volatility, Dividend), 
+                            and outputs the result as a heatmap of the option price over a range of strike prices and times to maturity. Heston model is yet to be implemented properly [TBD]
+                            The Greeks page calculates every Greek for a given option, and the VaR calculator page calculates the Value at Risk for a given portfolio of options. 
                         </div>
                     </div>
                 </a>
-            </div>
-            <div class="Projects-container">
                 <a href="Static/aquametric.html" class="project-link">
                     <div class="projectdiv">
                         <div class="projicon">
@@ -256,20 +260,25 @@
                         </div>
                         <div class="projtitle">AquaMetric</div> 
                         <div class="projblurb">
-                            This project provides a means of getting accurate water output from a water filter tank by modeling fluid mechanics
-                            equations using sklearn, visualizing using matplotlib, designing a 3D-printed enclosure, and basic electronics. 
+                            This project is an attachment for a Brita 18-cup water dispenser that automatically dispenses a user-specified volume of water. My approach derives
+                            theoretical drain-time equations from the Bernoulli and continuity equations for a trapezoidal frustum tank, then fits corrective cubic (volume) and 
+                            quintic (time) regression models in Python using sklearn to account for real-world measurement error, achieving a final volume error of around 19 mL. 
+                            The corrected models use the Secant root-finding method to calculate drain time from the sensor's height reading and the user's requested volume. 
+                            The code and technical writeup are available in the GitHub repository. 
                         </div>
                     </div>
                 </a>
+            </div>
+            <div class="Projects-container">
                 <a href="https://github.com/Sagittarius-B-Astro/BURST-CV" class="project-link">
                     <div class="projectdiv">
                         <div class="projicon">
                             <i class="fas fa-keyboard"></i>
                         </div>
-                        <div class="projtitle">Computer Vision for Biometric Underwater Robotics Submersible Team (BURST)</div>
+                        <div class="projtitle">Biometric Underwater Robotics Submersible Team (BURST) - Software Co-Lead</div>
                         <div class="projblurb">
-                            As a member of the BURST club at UVa, I am currently working on the implementation of computer vision using cv2 for our 
-                            Underwater submersible robot. 
+                            As the software co-lead of the BURST club at UVa, I worked on the implementation of the computer vision navigation system on our Underwater submersible. 
+                            The code is linked in the github repository. Primarily, we worked on calibration and testing of the camera system.
                         </div>
                     </div>
                 </a>
@@ -280,13 +289,13 @@
                         </div>
                         <div class="projtitle">Guitar Tabber</div>
                         <div class="projblurb">
-                            This is an ongoing project seeking to develop a program that can listen to a clip of guitar music and convert it into a 
-                            readable tab. Currently working on window sizing for the Short-Time Fourier Transform.
+                            This application is designed to take an audio file of a guitar performance and output a tablature representation of the performance. The scope is currently
+                            limited to a single acoustic guitar. My approach uses a combination of signal processing and machine learning techniques - note detection with STFTs / CQTs, and timbre analysis + 
+                            technique identification with specialized neural networks. Currently, standing issues include on improving the onset detection algorithm for the notes, the accuracy of the guitar 
+                            technique identification, tuning identification, and tablature conversion algorithm. The code is not yet linked in the repo but the readme / technical docs is available for reference [TBD]
                         </div>
                     </div>
                 </a>
-            </div>
-            <div class="Projects-container">
                 <a href="Static/clapswitch.html" class="project-link">
                     <div class="projectdiv">
                         <div class="projicon">
@@ -295,7 +304,8 @@
                         <div class="projtitle">Clap Light Switch</div>
                         <div class="projblurb">
                             In this project, I learned to use basic Arduino and Solidworks to design an enclosure and servo arm for my room's light
-                            switch because I feared incurring my landlord's wrath, but really wanted a clap switch.  
+                            switch. As my first attempt working with circuits, I learned that Arduinos were intentionally designed to be approachable and convenient.
+                            The project was a success, and I was able to control my room's light with a clap of my hands.
                         </div>
                     </div>
                 </a>
@@ -307,10 +317,13 @@
                         <div class="projtitle">Hyperbolic Visualization with Geometry Lab</div>
                         <div class="projblurb">
                             As part of the UVa Math Deparment's Hyperbolic Geometry subgroup, we developed a visualization of hyperbolic surfaces using 
-                            A-Frame, an HTML framework for building VR environments in my third semester. 
+                            A-Frame, an HTML framework for building VR environments in my third semester. This was eventually presented at the end-of-semester Geometry Lab showcase. 
+                            The code is available in the GitHub repository.
                         </div>
                     </div>
                 </a>
+            </div>
+            <div class="Projects-container">
                 <a href="Static/drp_presentation.html" class="project-link">
                     <div class="projectdiv">
                         <div class="projicon">
@@ -319,12 +332,10 @@
                         <div class="projtitle">Category Theory DRP Presentation</div>
                         <div class="projblurb">
                             In the Directed Reading Program in UVa's Math Department, I presented on various propositions and proofs relevant to 
-                            the foundation of Category Theory, up to the Yoneda Lemma.
+                            the foundation of Category Theory, up to the Yoneda Lemma. 
                         </div>
                     </div>
                 </a>
-            </div>
-            <div class="Projects-container">
                 <a href="index.html" class="project-link">
                     <div class="projectdiv">
                         <div class="projicon">
@@ -332,12 +343,12 @@
                         </div>
                         <div class="projtitle">Personal Portfolio Website</div>
                         <div class="projblurb">
-                            This was my first attempt at building a website from scratch with basic HTML, CSS, and Javascript. 
+                            This was my first attempt at building a website from scratch with basic HTML, CSS, and Javascript. I have built on the 
+                            foundation of this website to create the current version, which is more responsive and visually appealing. 
                         </div>
                     </div>
                 </a>
             </div>
-        </section>
         <section class="QandA" id="Cont">
             <div class="QandAtitle">Feel free to ask questions!</div>
             <a href="mailto:yejun7@gmail.com" class="QandAlink">
