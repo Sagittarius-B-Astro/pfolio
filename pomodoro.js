@@ -158,7 +158,51 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /* ===================== SYNCED TIMER ===================== */
 
-    const timerDisplay = document.getElementById("timerDisplay");
+    /* ===================== BELL SOUND ===================== */
+    // Synthesized with the Web Audio API - no sound file to host or fetch.
+    // Browsers block audio until the visitor has interacted with the page at least
+    // once, so the AudioContext is created/unlocked on the first Play click.
+
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function unlockAudio() {
+        if (!AudioContextClass) return;
+        if (!audioCtx) audioCtx = new AudioContextClass();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+    }
+
+    // Any interaction anywhere on the page unlocks audio, not just pressing Play -
+    // the person who opens this page may never touch the timer buttons themselves.
+    document.addEventListener("pointerdown", unlockAudio, { once: true });
+    document.addEventListener("keydown", unlockAudio, { once: true });
+
+    function playBell() {
+        if (!audioCtx) return;
+        try {
+            const t0 = audioCtx.currentTime;
+            [880, 1320].forEach((freq, i) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = "sine";
+                osc.frequency.value = freq;
+                const start = t0 + i * 0.15;
+                gain.gain.setValueAtTime(0.0001, start);
+                gain.gain.exponentialRampToValueAtTime(0.3, start + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, start + 1.2);
+                osc.connect(gain).connect(audioCtx.destination);
+                osc.start(start);
+                osc.stop(start + 1.3);
+            });
+        } catch (err) {
+            console.error("Could not play the bell sound:", err);
+        }
+    }
+
+
+    /* ===================== SYNCED TIMER ===================== */
+
+    const timerDisplay = document.getElementById("timerDisplay");    
     const toggleBtn = document.getElementById("toggleBtn");
     const resetBtn = document.getElementById("resetBtn");
 
@@ -212,14 +256,21 @@ document.addEventListener("DOMContentLoaded", function () {
             store.set(STATE_PATH, { running: false, endTime: null, remaining: DURATION });
             return;
         }
+        const wasRunning = remoteState.running;
         remoteState = data;
         finishing = false;
+        // Every open page (not just whichever one's transaction "won") sees this
+        // transition and rings its own bell - a real-finish, not a manual pause.
+        if (wasRunning && !data.running && (data.remaining || 0) <= 0) {
+            playBell();
+        }
         renderTimer();
     });
 
     setInterval(renderTimer, 250);
 
     toggleBtn.addEventListener("click", () => {
+        unlockAudio();
         if (remoteState.running) {
             store.set(STATE_PATH, { running: false, endTime: null, remaining: secondsLeft() });
         } else {
