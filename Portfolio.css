@@ -299,19 +299,24 @@ header.shrink {
 }
 
 .Expcontent {
+    /* --slot is the height reserved for one card. The script in index.html
+       sets it to the tallest card's real height, so nothing gets clipped.
+       The value here is only a fallback if JavaScript doesn't run. */
+    --slot: 460px;
+    --gap: 40px;
+    --step: calc((var(--slot) + var(--gap)) / 2);
     display: flex;
     flex-direction: row;
-    align-items: flex-start;    
+    align-items: flex-start;
     justify-content: center;
-    gap: 0px;
-    padding-top: 80px;
+    padding: 80px 0;
     width: 100%;
     font-weight: bold;
     color: #fce7c8;
     opacity: 0;
     transition: opacity 1.5s ease-in-out;
     position: relative;
-    height: 1600px;
+    height: calc(var(--step) * 6 + var(--slot) + 160px);
 }
 
 .workcolumn {
@@ -330,31 +335,25 @@ header.shrink {
     justify-content: flex-end;
 }
 
-.workcolumn-left .workinstance {
-    transform: translateY(160px);
-}
-
-.workcolumn-right .workinstance {
-    transform: translateY(-20px);
-}
-
 .workinstance {
     background-color: #394d6c;
     padding: 30px;
     font-size: 16px;
-    max-height: 330px;
     border: 2px solid black;
-    overflow: hidden;
     width: 100%;
     border-radius: 10px;
-    flex-direction: column;
     position: absolute;
 }
 
-.workinstance:nth-child(1) { top: 0px; }
-.workinstance:nth-child(2) { top: 360px; }
-.workinstance:nth-child(3) { top: 720px; }
-.workinstance:nth-child(4) { top: 1080px; }
+/* Right column sits on steps 0, 2, 4, 6; left column on steps 1, 3, 5 */
+.workcolumn-right .workinstance:nth-child(1) { top: 0px; }
+.workcolumn-right .workinstance:nth-child(2) { top: calc(var(--step) * 2); }
+.workcolumn-right .workinstance:nth-child(3) { top: calc(var(--step) * 4); }
+.workcolumn-right .workinstance:nth-child(4) { top: calc(var(--step) * 6); }
+
+.workcolumn-left .workinstance:nth-child(1) { top: calc(var(--step) * 1); }
+.workcolumn-left .workinstance:nth-child(2) { top: calc(var(--step) * 3); }
+.workcolumn-left .workinstance:nth-child(3) { top: calc(var(--step) * 5); }
 
 .worktop {
     color: #f4eedb;
@@ -375,16 +374,24 @@ header.shrink {
 }
 
 .tree {
-    display: flex;
-    width: 300px;
+    /* Scales with the screen; the negative margin lets the line reach
+       the dots, which sit just inside each card's edge. */
+    flex: 0 0 clamp(120px, 20vw, 300px);
+    margin: 0 -20px;
     position: relative;
-    justify-content: center;
-    align-items: center;
-    height: auto;
-    text-align: center;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.tree svg {
+    display: block;
+    width: 100%;
+    height: calc(var(--step) * 6);
+    margin-top: 20px; /* lines up with the dot centers */
 }
 
 .green-dot {
+    z-index: 3;
     position: absolute;
     top: 10px;
     width: 15px;
@@ -420,30 +427,161 @@ header.shrink {
     transition: opacity 1.5s ease-in-out;
 }
 
-.Projiconbar {
-    padding-top: 50px;
+.projfilters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    padding: 30px 20px 0;
+}
+
+.filter-btn {
+    font-family: 'Baskervville', sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fce7c8;
+    background: transparent;
+    border: 2px solid #fada7a;
+    border-radius: 30px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.filter-btn i {
+    margin-right: 8px;
+}
+
+.filter-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.filter-btn.active {
+    background-color: #fada7a;
+    color: #8fa481;
+}
+
+.filter-btn:focus-visible,
+.readmore:focus-visible {
+    outline: 2px solid #fce7c8;
+    outline-offset: 3px;
+}
+
+/* Cards wrap to fit the screen: 3 across on desktop, 2 on tablet, 1 on phones.
+   Rows with fewer cards (e.g. after filtering) stay centered. */
+.Projects-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+    width: 100%;
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 50px 40px 10px;
+}
+
+.projectcard {
+    position: relative;
+    flex: 1 1 340px;
+    max-width: 460px;
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+    border-radius: 10px;
+    border: 2px solid #fada7a;
+    padding: 30px;
+    transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+.projectcard[hidden] {
+    display: none;
+}
+
+.projectcard:hover {
+    transform: scale(1.03);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* The title link stretches over the whole card so the card stays clickable */
+.project-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.project-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+}
+
+.project-link:focus-visible::after {
+    outline: 3px solid #fce7c8;
+    outline-offset: 3px;
+}
+
+.projicon {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 30px;
-    width: 100%;
+    gap: 20px;
 }
 
-.icon-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-}
-
-.icon-wrapper i {
+.projicon i {
     font-size: 30px;
     color: #fce7c8;
-    transition: transform 0.5s ease-in-out;
 }
 
-.icon-wrapper:hover i {
-    transform: rotate(360deg);
+.projtitle {
+    font-size: 25px;
+    font-weight: bold;
+    text-align: center;
+    color: #fce7c8;
+    padding: 20px 0 14px;
+}
+
+.projblurb {
+    font-size: 18px;
+    line-height: 1.45;
+    color: #fce7c8;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    overflow: hidden;
+}
+
+.projblurb.expanded {
+    display: block;
+    overflow: visible;
+}
+
+.readmore {
+    position: relative;
+    z-index: 1;
+    align-self: flex-start;
+    margin-top: 14px;
+    padding: 0;
+    background: none;
+    border: none;
+    font-family: 'Baskervville', sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fada7a;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.readmore[hidden] {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .Projects-grid {
+        padding: 30px 20px 10px;
+        gap: 24px;
+    }
 }
 
 .icon-text {
@@ -458,77 +596,6 @@ header.shrink {
     padding: 5px 10px;
     border-radius: 5px;
     white-space: nowrap;
-}
-
-.icon-wrapper:hover .icon-text {
-    opacity: 1;
-}
-
-.Projects-container {
-    padding-top: 50px;
-    max-height: 800px; 
-    width: 100%;
-    gap: 60px;
-    display: flex;
-    justify-content: center;
-    flex-direction: row;
-    padding-bottom: 10px;
-}
-
-.projectdiv {
-    border-radius: 10px;
-    width: 500px;
-    height: 560px;
-    display: flex;
-    flex-direction: column;
-    border: 2px solid #fada7a;
-    padding: 40px;
-    transition: transform 0.2s ease-in-out;
-}
-
-.project-link {
-    text-decoration: none;
-    color: inherit;
-    display: inline-block;
-}
-
-.projectdiv:hover {
-    cursor: pointer;
-    transform: scale(1.05);
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.projicon {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    gap: 20px;
-}
-
-.projicon i {
-    font-size: 30px;
-    color: #fce7c8;
-    transition: transform 0.5s ease-in-out;
-}
-
-.projtitle {
-    font-size: 25px;
-    font-weight: bold;
-    text-align: center;
-    color: #fce7c8;
-    justify-content: center;
-    align-items: center;
-    padding-bottom: 20px;
-    padding-top: 40px;
-}
-
-.projblurb {
-    font-size: 18px;
-    justify-content: center;
-    align-items: center;
-    color: #fce7c8;
 }
 
 .QandA {

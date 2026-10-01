@@ -119,13 +119,8 @@
                     </div>
                 </div>
                 <div class="tree">
-                    <svg width="300" height="1200" viewBox="0 0 300 1200" xmlns="http://www.w3.org/2000/svg">
-                        <line x1="300" y1="0" x2="0" y2="180" stroke="white" stroke-width="2"/>
-                        <line x1="0" y1="180" x2="300" y2="360" stroke="white" stroke-width="2"/>
-                        <line x1="300" y1="360" x2="0" y2="540" stroke="white" stroke-width="2"/>
-                        <line x1="0" y1="540" x2="300" y2="720" stroke="white" stroke-width="2"/>
-                        <line x1="300" y1="720" x2="0" y2="900" stroke="white" stroke-width="2"/>
-                        <line x1="0" y1="900" x2="300" y2="1080" stroke="white" stroke-width="2"/>
+                    <svg viewBox="0 0 100 6" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <polyline points="100,0 0,1 100,2 0,3 100,4 0,5 100,6" fill="none" stroke="white" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
                     </svg>
                 </div>
                 <div class="workcolumn workcolumn-right">
@@ -140,7 +135,7 @@
                             <ul>
                                 <li>Wrote SQL search queries against customer production systems to surface performance and reliability metrics, resolving 20+ high-severity issues per month via root-cause investigation across 200+ databases</li>
                                 <li>Guided end-users through fixes and workarounds for production issues while escalating unresolved defects to R&D, contributing to 15+ fixes / enhancements</li>
-                                <li>Built diagnostic tooling for recurring production issues, adopted by 2-3 implementation teams and reducing manual troubleshooting time by up to 40\%</li>
+                                <li>Built diagnostic tooling for recurring production issues, adopted by 2-3 implementation teams and reducing manual troubleshooting time by up to 40%</li>
                             </ul>
                         </div>
                     </div>
@@ -193,162 +188,75 @@
         </section>
         <section class="Projects" id="Proj">
             <div class="Projtitle">Projects</div>
-            <div class="Projiconbar">
-                <div class="icon-wrapper">
-                    <i class="fas fa-hammer"></i>
-                    <span class="icon-text">Mechanical Projects</span>
-                </div>
-                <div class="icon-wrapper">
-                    <i class="fas fa-keyboard"></i>
-                    <span class="icon-text">Coding Projects</span>
-                </div>
-                <div class="icon-wrapper">
-                    <i class="fas fa-scroll"></i>
-                    <span class="icon-text">Presentations</span>
-                </div>
+            <div class="projfilters" role="group" aria-label="Filter projects by type">
+                <button type="button" class="filter-btn active" data-filter="all" aria-pressed="true">All</button>
+                <button type="button" class="filter-btn" data-filter="mechanical" aria-pressed="false"><i class="fas fa-hammer" aria-hidden="true"></i>Mechanical</button>
+                <button type="button" class="filter-btn" data-filter="coding" aria-pressed="false"><i class="fas fa-keyboard" aria-hidden="true"></i>Coding</button>
+                <button type="button" class="filter-btn" data-filter="presentations" aria-pressed="false"><i class="fas fa-scroll" aria-hidden="true"></i>Presentations</button>
             </div>
-            <div class="Projects-container">
-                <a href="Static/capstone.html" class="project-link">
-                    <div class="projectdiv">
-                        <div class="projicon">
-                            <i class="fas fa-hammer"></i>
-                            <i class="fas fa-scroll"></i>
-                        </div>
-                        <div class="projtitle">Mars Airborne Residue Remediation System - Electrical, Software and Controls Lead</div>
-                        <div class="projblurb">
-                            Our Capstone Project tests the effectiveness of an electrostatic precipitator (EP) as a means of Martian dust remediation,
-                            removing particles from suits and equipment. This technology is designed to be integrated into extraterrestrial habitats.
-                            My role was to lead the electrical, software, and controls team, which designed the EP's control system and developed a GUI 
-                            for testing and data collection, made visible in the official Capstone Project Technical Report.
-                        </div>
-                    </div>
-                </a>
-                <a href="https://sagittarius-b-astro.github.io/OrbitalTransferCalculator/" class="project-link">
-                    <div class="projectdiv">
-                        <div class="projicon">
-                            <i class="fas fa-keyboard"></i>
-                        </div>
-                        <div class="projtitle">Orbital Transfer Calculator</div>
-                        <div class="projblurb">
-                            The OTC implements a user-friendly interface to calculate orbital transfers, asking for parameters for the Hohmann, 
-                            Bi-Elliptic Hohmann, Common Apse Line, Apse Line Rotation, and Plane Change transfers. Upon calculation, it displays the results 
-                            and visualizes the initial, target and transit trajectories on an embedded Desmos Calculator. Technical documentation attached 
-                            to the project provides a detailed explanation of the calculations and assumptions made in the code [TBD]
-                        </div>
-                    </div>
-                </a>
-                <a href="https://financecalculator.streamlit.app/" class="project-link">
-                    <div class="projectdiv">
-                        <div class="projicon">
-                            <i class="fas fa-keyboard"></i>
-                        </div>
-                        <div class="projtitle">Options Pricing and Greeks Calculator</div>
-                        <div class="projblurb">
-                            This streamlit application uses pandas, seaborn, and matplotlib to allow the user to calculate the ideal price for a call and put
-                            given various user inputs (Price of Option, Current Asset Price, Strike Price, Time to Maturity, Risk-Free Interest Rate, Volatility, Dividend), 
-                            and outputs the result as a heatmap of the option price over a range of strike prices and times to maturity. Heston model is yet to be implemented properly [TBD]
-                            The Greeks page calculates every Greek for a given option, and the VaR calculator page calculates the Value at Risk for a given portfolio of options. 
-                        </div>
-                    </div>
-                </a>
-                <a href="Static/aquametric.html" class="project-link">
-                    <div class="projectdiv">
-                        <div class="projicon">
-                            <i class="fas fa-hammer"></i>
-                            <i class="fas fa-keyboard"></i>
-                            <i class="fas fa-scroll"></i>
-                        </div>
-                        <div class="projtitle">AquaMetric</div> 
-                        <div class="projblurb">
-                            This project is an attachment for a Brita 18-cup water dispenser that automatically dispenses a user-specified volume of water. My approach derives
-                            theoretical drain-time equations from the Bernoulli and continuity equations for a trapezoidal frustum tank, then fits corrective cubic (volume) and 
-                            quintic (time) regression models in Python using sklearn to account for real-world measurement error, achieving a final volume error of around 19 mL. 
-                            The corrected models use the Secant root-finding method to calculate drain time from the sensor's height reading and the user's requested volume. 
-                            The code and technical writeup are available in the GitHub repository. 
-                        </div>
-                    </div>
-                </a>
+            <div class="Projects-grid">
+                <article class="projectcard" data-cat="mechanical presentations">
+                    <div class="projicon"><i class="fas fa-hammer" aria-hidden="true"></i><i class="fas fa-scroll" aria-hidden="true"></i></div>
+                    <h3 class="projtitle"><a href="Static/capstone.html" class="project-link">Mars Airborne Residue Remediation System - Electrical, Software and Controls Lead</a></h3>
+                    <p class="projblurb">Our Capstone Project tests the effectiveness of an electrostatic precipitator (EP) as a means of Martian dust remediation, removing particles from suits and equipment. This technology is designed to be integrated into extraterrestrial habitats. My role was to lead the electrical, software, and controls team, which designed the EP's control system and developed a GUI for testing and data collection, made visible in the official Capstone Project Technical Report.</p>
+                    <button type="button" class="readmore" aria-expanded="false" hidden>Read more</button>
+                </article>
+                <article class="projectcard" data-cat="coding">
+                    <div class="projicon"><i class="fas fa-keyboard" aria-hidden="true"></i></div>
+                    <h3 class="projtitle"><a href="https://sagittarius-b-astro.github.io/OrbitalTransferCalculator/" class="project-link">Orbital Transfer Calculator</a></h3>
+                    <p class="projblurb">The OTC implements a user-friendly interface to calculate orbital transfers, asking for parameters for the Hohmann, Bi-Elliptic Hohmann, Common Apse Line, Apse Line Rotation, and Plane Change transfers. Upon calculation, it displays the results and visualizes the initial, target and transit trajectories on an embedded Desmos Calculator. Technical documentation attached to the project provides a detailed explanation of the calculations and assumptions made in the code [TBD]</p>
+                    <button type="button" class="readmore" aria-expanded="false" hidden>Read more</button>
+                </article>
+                <article class="projectcard" data-cat="coding">
+                    <div class="projicon"><i class="fas fa-keyboard" aria-hidden="true"></i></div>
+                    <h3 class="projtitle"><a href="https://financecalculator.streamlit.app/" class="project-link">Options Pricing and Greeks Calculator</a></h3>
+                    <p class="projblurb">This streamlit application uses pandas, seaborn, and matplotlib to allow the user to calculate the ideal price for a call and put given various user inputs (Price of Option, Current Asset Price, Strike Price, Time to Maturity, Risk-Free Interest Rate, Volatility, Dividend), and outputs the result as a heatmap of the option price over a range of strike prices and times to maturity. Heston model is yet to be implemented properly [TBD] The Greeks page calculates every Greek for a given option, and the VaR calculator page calculates the Value at Risk for a given portfolio of options.</p>
+                    <button type="button" class="readmore" aria-expanded="false" hidden>Read more</button>
+                </article>
+                <article class="projectcard" data-cat="mechanical coding presentations">
+                    <div class="projicon"><i class="fas fa-hammer" aria-hidden="true"></i><i class="fas fa-keyboard" aria-hidden="true"></i><i class="fas fa-scroll" aria-hidden="true"></i></div>
+                    <h3 class="projtitle"><a href="Static/aquametric.html" class="project-link">AquaMetric</a></h3>
+                    <p class="projblurb">This project is an attachment for a Brita 18-cup water dispenser that automatically dispenses a user-specified volume of water. My approach derives theoretical drain-time equations from the Bernoulli and continuity equations for a trapezoidal frustum tank, then fits corrective cubic (volume) and quintic (time) regression models in Python using sklearn to account for real-world measurement error, achieving a final volume error of around 19 mL. The corrected models use the Secant root-finding method to calculate drain time from the sensor's height reading and the user's requested volume. The code and technical writeup are available in the GitHub repository.</p>
+                    <button type="button" class="readmore" aria-expanded="false" hidden>Read more</button>
+                </article>
+                <article class="projectcard" data-cat="coding">
+                    <div class="projicon"><i class="fas fa-keyboard" aria-hidden="true"></i></div>
+                    <h3 class="projtitle"><a href="https://github.com/Sagittarius-B-Astro/BURST-CV" class="project-link">Biometric Underwater Robotics Submersible Team (BURST) - Software Co-Lead</a></h3>
+                    <p class="projblurb">As the software co-lead of the BURST club at UVa, I worked on the implementation of the computer vision navigation system on our Underwater submersible. The code is linked in the github repository. Primarily, we worked on calibration and testing of the camera system.</p>
+                    <button type="button" class="readmore" aria-expanded="false" hidden>Read more</button>
+                </article>
+                <article class="projectcard" data-cat="coding">
+                    <div class="projicon"><i class="fas fa-keyboard" aria-hidden="true"></i></div>
+                    <h3 class="projtitle"><a href="https://github.com/Sagittarius-B-Astro/AcousticGuitarTabber" class="project-link">Guitar Tabber</a></h3>
+                    <p class="projblurb">This application is designed to take an audio file of a guitar performance and output a tablature representation of the performance. The scope is currently limited to a single acoustic guitar. My approach uses a combination of signal processing and machine learning techniques - note detection with STFTs / CQTs, and timbre analysis + technique identification with specialized neural networks. Currently, standing issues include on improving the onset detection algorithm for the notes, the accuracy of the guitar technique identification, tuning identification, and tablature conversion algorithm. The code is not yet linked in the repo but the readme / technical docs is available for reference [TBD]</p>
+                    <button type="button" class="readmore" aria-expanded="false" hidden>Read more</button>
+                </article>
+                <article class="projectcard" data-cat="mechanical">
+                    <div class="projicon"><i class="fas fa-hammer" aria-hidden="true"></i></div>
+                    <h3 class="projtitle"><a href="Static/clapswitch.html" class="project-link">Clap Light Switch</a></h3>
+                    <p class="projblurb">In this project, I learned to use basic Arduino and Solidworks to design an enclosure and servo arm for my room's light switch. As my first attempt working with circuits, I learned that Arduinos were intentionally designed to be approachable and convenient. The project was a success, and I was able to control my room's light with a clap of my hands.</p>
+                    <button type="button" class="readmore" aria-expanded="false" hidden>Read more</button>
+                </article>
+                <article class="projectcard" data-cat="coding">
+                    <div class="projicon"><i class="fas fa-keyboard" aria-hidden="true"></i></div>
+                    <h3 class="projtitle"><a href="https://github.com/Sagittarius-B-Astro/CustomComponents" class="project-link">Hyperbolic Visualization with Geometry Lab</a></h3>
+                    <p class="projblurb">As part of the UVa Math Deparment's Hyperbolic Geometry subgroup, we developed a visualization of hyperbolic surfaces using A-Frame, an HTML framework for building VR environments in my third semester. This was eventually presented at the end-of-semester Geometry Lab showcase. The code is available in the GitHub repository.</p>
+                    <button type="button" class="readmore" aria-expanded="false" hidden>Read more</button>
+                </article>
+                <article class="projectcard" data-cat="presentations">
+                    <div class="projicon"><i class="fas fa-scroll" aria-hidden="true"></i></div>
+                    <h3 class="projtitle"><a href="Static/drp_presentation.html" class="project-link">Category Theory DRP Presentation</a></h3>
+                    <p class="projblurb">In the Directed Reading Program in UVa's Math Department, I presented on various propositions and proofs relevant to the foundation of Category Theory, up to the Yoneda Lemma.</p>
+                    <button type="button" class="readmore" aria-expanded="false" hidden>Read more</button>
+                </article>
+                <article class="projectcard" data-cat="coding">
+                    <div class="projicon"><i class="fas fa-keyboard" aria-hidden="true"></i></div>
+                    <h3 class="projtitle"><a href="index.html" class="project-link">Personal Portfolio Website</a></h3>
+                    <p class="projblurb">This was my first attempt at building a website from scratch with basic HTML, CSS, and Javascript. I have built on the foundation of this website to create the current version, which is more responsive and visually appealing.</p>
+                    <button type="button" class="readmore" aria-expanded="false" hidden>Read more</button>
+                </article>
             </div>
-            <div class="Projects-container">
-                <a href="https://github.com/Sagittarius-B-Astro/BURST-CV" class="project-link">
-                    <div class="projectdiv">
-                        <div class="projicon">
-                            <i class="fas fa-keyboard"></i>
-                        </div>
-                        <div class="projtitle">Biometric Underwater Robotics Submersible Team (BURST) - Software Co-Lead</div>
-                        <div class="projblurb">
-                            As the software co-lead of the BURST club at UVa, I worked on the implementation of the computer vision navigation system on our Underwater submersible. 
-                            The code is linked in the github repository. Primarily, we worked on calibration and testing of the camera system.
-                        </div>
-                    </div>
-                </a>
-                <a href="https://github.com/Sagittarius-B-Astro/AcousticGuitarTabber" class="project-link">
-                    <div class="projectdiv">
-                        <div class="projicon">
-                            <i class="fas fa-keyboard"></i>
-                        </div>
-                        <div class="projtitle">Guitar Tabber</div>
-                        <div class="projblurb">
-                            This application is designed to take an audio file of a guitar performance and output a tablature representation of the performance. The scope is currently
-                            limited to a single acoustic guitar. My approach uses a combination of signal processing and machine learning techniques - note detection with STFTs / CQTs, and timbre analysis + 
-                            technique identification with specialized neural networks. Currently, standing issues include on improving the onset detection algorithm for the notes, the accuracy of the guitar 
-                            technique identification, tuning identification, and tablature conversion algorithm. The code is not yet linked in the repo but the readme / technical docs is available for reference [TBD]
-                        </div>
-                    </div>
-                </a>
-                <a href="Static/clapswitch.html" class="project-link">
-                    <div class="projectdiv">
-                        <div class="projicon">
-                            <i class="fas fa-hammer"></i>
-                        </div>
-                        <div class="projtitle">Clap Light Switch</div>
-                        <div class="projblurb">
-                            In this project, I learned to use basic Arduino and Solidworks to design an enclosure and servo arm for my room's light
-                            switch. As my first attempt working with circuits, I learned that Arduinos were intentionally designed to be approachable and convenient.
-                            The project was a success, and I was able to control my room's light with a clap of my hands.
-                        </div>
-                    </div>
-                </a>
-                <a href="https://github.com/Sagittarius-B-Astro/CustomComponents" class="project-link">
-                    <div class="projectdiv">
-                        <div class="projicon">
-                            <i class="fas fa-keyboard"></i>
-                        </div>
-                        <div class="projtitle">Hyperbolic Visualization with Geometry Lab</div>
-                        <div class="projblurb">
-                            As part of the UVa Math Deparment's Hyperbolic Geometry subgroup, we developed a visualization of hyperbolic surfaces using 
-                            A-Frame, an HTML framework for building VR environments in my third semester. This was eventually presented at the end-of-semester Geometry Lab showcase. 
-                            The code is available in the GitHub repository.
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="Projects-container">
-                <a href="Static/drp_presentation.html" class="project-link">
-                    <div class="projectdiv">
-                        <div class="projicon">
-                            <i class="fas fa-scroll"></i>
-                        </div>
-                        <div class="projtitle">Category Theory DRP Presentation</div>
-                        <div class="projblurb">
-                            In the Directed Reading Program in UVa's Math Department, I presented on various propositions and proofs relevant to 
-                            the foundation of Category Theory, up to the Yoneda Lemma. 
-                        </div>
-                    </div>
-                </a>
-                <a href="index.html" class="project-link">
-                    <div class="projectdiv">
-                        <div class="projicon">
-                            <i class="fas fa-keyboard"></i>
-                        </div>
-                        <div class="projtitle">Personal Portfolio Website</div>
-                        <div class="projblurb">
-                            This was my first attempt at building a website from scratch with basic HTML, CSS, and Javascript. I have built on the 
-                            foundation of this website to create the current version, which is more responsive and visually appealing. 
-                        </div>
-                    </div>
-                </a>
-            </div>
+        </section>
         <section class="QandA" id="Cont">
             <div class="QandAtitle">Feel free to ask questions!</div>
             <a href="mailto:yejun7@gmail.com" class="QandAlink">
@@ -386,6 +294,85 @@
                     header.classList.remove("shrink");
                 }
             });
+        </script>
+        <script>
+            // Sizes the Experience card slots to the tallest card so text is never clipped.
+            (function () {
+                let queued = false;
+                function fitExperienceCards() {
+                    const content = document.querySelector(".Expcontent");
+                    if (!content) return;
+                    let tallest = 0;
+                    content.querySelectorAll(".workinstance").forEach(card => {
+                        tallest = Math.max(tallest, card.offsetHeight);
+                    });
+                    content.style.setProperty("--slot", Math.ceil(tallest) + "px");
+                }
+                function queueFit() {
+                    if (queued) return;
+                    queued = true;
+                    requestAnimationFrame(() => { queued = false; fitExperienceCards(); });
+                }
+                document.addEventListener("DOMContentLoaded", fitExperienceCards);
+                window.addEventListener("load", fitExperienceCards);
+                window.addEventListener("resize", queueFit);
+                if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitExperienceCards);
+            })();
+        </script>
+        <script>
+            // Project filters + "Read more" expanders
+            (function () {
+                const grid = document.querySelector(".Projects-grid");
+                if (!grid) return;
+                const cards = Array.from(grid.querySelectorAll(".projectcard"));
+                const filterButtons = document.querySelectorAll(".filter-btn");
+
+                // Show "Read more" only on blurbs that are actually clamped.
+                function measureBlurbs() {
+                    cards.forEach(card => {
+                        const blurb = card.querySelector(".projblurb");
+                        const btn = card.querySelector(".readmore");
+                        if (card.hidden || blurb.classList.contains("expanded")) return;
+                        btn.hidden = !(blurb.scrollHeight > blurb.clientHeight + 1);
+                    });
+                }
+
+                filterButtons.forEach(button => {
+                    button.addEventListener("click", () => {
+                        const filter = button.dataset.filter;
+                        filterButtons.forEach(b => {
+                            const on = b === button;
+                            b.classList.toggle("active", on);
+                            b.setAttribute("aria-pressed", on);
+                        });
+                        cards.forEach(card => {
+                            const cats = card.dataset.cat.split(" ");
+                            card.hidden = !(filter === "all" || cats.includes(filter));
+                        });
+                        measureBlurbs();
+                    });
+                });
+
+                cards.forEach(card => {
+                    const blurb = card.querySelector(".projblurb");
+                    const btn = card.querySelector(".readmore");
+                    btn.addEventListener("click", () => {
+                        const open = blurb.classList.toggle("expanded");
+                        btn.textContent = open ? "Show less" : "Read more";
+                        btn.setAttribute("aria-expanded", open);
+                    });
+                });
+
+                let queued = false;
+                window.addEventListener("resize", () => {
+                    if (queued) return;
+                    queued = true;
+                    requestAnimationFrame(() => { queued = false; measureBlurbs(); });
+                });
+                document.addEventListener("DOMContentLoaded", measureBlurbs);
+                window.addEventListener("load", measureBlurbs);
+                if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureBlurbs);
+            })();
         </script>
     </body>
 </html>
