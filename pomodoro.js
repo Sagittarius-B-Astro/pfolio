@@ -17,7 +17,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Database paths (shared by everyone who opens the page)
     const STATE_PATH = "pomodoroState";
-    const TASKS_PATH = "pomodoroTasks";
+    const TASKS_PATH_Y = "pomodoroTasksY";
+    const TASKS_PATH_R = "pomodoroTasksR";
     const SUMMARY_PATH = "pomodoroSummary";
 
 
@@ -285,20 +286,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-    /* ===================== SYNCED CHECKLIST ===================== */
-
-    const taskInput = document.getElementById("taskInput");
-    const taskList = document.getElementById("taskList");
-    taskInput.maxLength = MAX_TASK_LENGTH;
-
-    let tasks = [];                 // sorted array built from the database
-    const taskEls = new Map();      // task id -> its DOM element (so edits from others don't rebuild the list)
+        /* ===================== SYNCED CHECKLISTS ===================== */
 
     const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    const taskPath = (id) => `${TASKS_PATH}/${id}`;
 
-    // Grow the box to fit the text, up to MAX_TASK_LINES; beyond that it scrolls
-    // and the full text is available as a hover tooltip.
+    // Grow a task's text box to fit its content, up to MAX_TASK_LINES; beyond that it
+    // scrolls and the full text is available as a hover tooltip. Shared by both checklists.
     function autosize(el) {
         if (!el.isConnected) return;
         const cs = getComputedStyle(el);
@@ -314,112 +307,129 @@ document.addEventListener("DOMContentLoaded", function () {
         if (clamped) el.title = el.value; else el.removeAttribute("title");
     }
 
-    function autosizeAll() {
-        taskEls.forEach((el) => autosize(el.querySelector(".task-text")));
-    }
+    // One independent checklist: its own database path, its own input/list elements,
+    // its own in-memory task array. Completions from either checklist still feed the
+    // one shared weekly summary below.
+    function createChecklist(tasksPath, inputId, listId) {
+        const taskInput = document.getElementById(inputId);
+        const taskList = document.getElementById(listId);
+        taskInput.maxLength = MAX_TASK_LENGTH;
 
-    function buildTaskEl(id) {
-        const item = document.createElement("div");
-        item.className = "task-item";
+        let tasks = [];                 // sorted array built from the database
+        const taskEls = new Map();      // task id -> its DOM element
 
-        const checkBtn = document.createElement("button");
-        checkBtn.className = "task-check-btn";
-        checkBtn.innerHTML = '<i class="fas fa-check"></i>';
-        checkBtn.setAttribute("aria-label", "Mark task complete");
-        checkBtn.addEventListener("click", () => toggleTask(id));
+        const taskPath = (id) => `${tasksPath}/${id}`;
 
-        const cancelBtn = document.createElement("button");
-        cancelBtn.className = "task-cancel-btn";
-        cancelBtn.innerHTML = '<i class="fas fa-xmark"></i>';
-        cancelBtn.setAttribute("aria-label", "Remove task");
-        cancelBtn.addEventListener("click", () => removeTask(id));
-
-        const text = document.createElement("textarea");
-        text.className = "task-text";
-        text.rows = 1;
-        text.maxLength = MAX_TASK_LENGTH;
-        text.setAttribute("aria-label", "Task");
-        text.addEventListener("input", () => autosize(text));
-        text.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") { e.preventDefault(); text.blur(); }
-        });
-        text.addEventListener("change", () => {
-            const task = tasks.find((t) => t.id === id);
-            const value = text.value.trim();
-            if (!task) return;
-            if (!value) { text.value = task.text; autosize(text); return; } // don't allow empty tasks
-            store.update(taskPath(id), { text: value });
-        });
-
-        item.appendChild(checkBtn);
-        item.appendChild(cancelBtn);
-        item.appendChild(text);
-        return item;
-    }
-
-    function renderTasks() {
-        const seen = new Set();
-        tasks.forEach((task, index) => {
-            seen.add(task.id);
-            let el = taskEls.get(task.id);
-            if (!el) {
-                el = buildTaskEl(task.id);
-                taskEls.set(task.id, el);
-            }
-            el.classList.toggle("completed", task.completed);
-            const text = el.querySelector(".task-text");
-            // Don't overwrite what someone is typing right now
-            if (document.activeElement !== text && text.value !== task.text) text.value = task.text;
-
-            if (taskList.children[index] !== el) {
-                taskList.insertBefore(el, taskList.children[index] || null);
-            }
-        });
-        taskEls.forEach((el, id) => {
-            if (!seen.has(id)) { el.remove(); taskEls.delete(id); }
-        });
-        autosizeAll();
-    }
-
-    store.subscribe(TASKS_PATH, (data) => {
-        tasks = Object.entries(data || {})
-            .filter(([, t]) => t && typeof t.text === "string")
-            .map(([id, t]) => ({ id, text: t.text, completed: !!t.completed, createdAt: Number(t.createdAt) || 0 }))
-            .sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
-        renderTasks();
-    });
-
-    function addTask(text) {
-        const trimmed = text.trim();
-        if (!trimmed) return;
-        store.set(taskPath(newId()), { text: trimmed.slice(0, MAX_TASK_LENGTH), completed: false, createdAt: now() });
-    }
-
-    function toggleTask(id) {
-        const task = tasks.find((t) => t.id === id);
-        if (!task) return;
-        const completed = !task.completed;
-        store.update(taskPath(id), { completed });
-        // Keyed by task id, so checking / unchecking never creates duplicate summary entries
-        const summaryEntry = `${SUMMARY_PATH}/${weekKey()}/completed/${id}`;
-        if (completed) store.set(summaryEntry, { text: task.text, at: now() });
-        else store.remove(summaryEntry);
-    }
-
-    function removeTask(id) {
-        store.remove(taskPath(id)); // the weekly summary keeps tasks that were already completed
-    }
-
-    taskInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-            addTask(taskInput.value);
-            taskInput.value = "";
+        function autosizeAll() {
+            taskEls.forEach((el) => autosize(el.querySelector(".task-text")));
         }
-    });
 
-    // Re-measure when the layout or web font changes how the text wraps
-    window.addEventListener("resize", autosizeAll);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(autosizeAll);
+        function buildTaskEl(id) {
+            const item = document.createElement("div");
+            item.className = "task-item";
+
+            const checkBtn = document.createElement("button");
+            checkBtn.className = "task-check-btn";
+            checkBtn.innerHTML = '<i class="fas fa-check"></i>';
+            checkBtn.setAttribute("aria-label", "Mark task complete");
+            checkBtn.addEventListener("click", () => toggleTask(id));
+
+            const cancelBtn = document.createElement("button");
+            cancelBtn.className = "task-cancel-btn";
+            cancelBtn.innerHTML = '<i class="fas fa-xmark"></i>';
+            cancelBtn.setAttribute("aria-label", "Remove task");
+            cancelBtn.addEventListener("click", () => removeTask(id));
+
+            const text = document.createElement("textarea");
+            text.className = "task-text";
+            text.rows = 1;
+            text.maxLength = MAX_TASK_LENGTH;
+            text.setAttribute("aria-label", "Task");
+            text.addEventListener("input", () => autosize(text));
+            text.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") { e.preventDefault(); text.blur(); }
+            });
+            text.addEventListener("change", () => {
+                const task = tasks.find((t) => t.id === id);
+                const value = text.value.trim();
+                if (!task) return;
+                if (!value) { text.value = task.text; autosize(text); return; } // don't allow empty tasks
+                store.update(taskPath(id), { text: value });
+            });
+
+            item.appendChild(checkBtn);
+            item.appendChild(cancelBtn);
+            item.appendChild(text);
+            return item;
+        }
+
+        function renderTasks() {
+            const seen = new Set();
+            tasks.forEach((task, index) => {
+                seen.add(task.id);
+                let el = taskEls.get(task.id);
+                if (!el) {
+                    el = buildTaskEl(task.id);
+                    taskEls.set(task.id, el);
+                }
+                el.classList.toggle("completed", task.completed);
+                const text = el.querySelector(".task-text");
+                // Don't overwrite what someone is typing right now
+                if (document.activeElement !== text && text.value !== task.text) text.value = task.text;
+
+                if (taskList.children[index] !== el) {
+                    taskList.insertBefore(el, taskList.children[index] || null);
+                }
+            });
+            taskEls.forEach((el, id) => {
+                if (!seen.has(id)) { el.remove(); taskEls.delete(id); }
+            });
+            autosizeAll();
+        }
+
+        store.subscribe(tasksPath, (data) => {
+            tasks = Object.entries(data || {})
+                .filter(([, t]) => t && typeof t.text === "string")
+                .map(([id, t]) => ({ id, text: t.text, completed: !!t.completed, createdAt: Number(t.createdAt) || 0 }))
+                .sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+            renderTasks();
+        });
+
+        function addTask(text) {
+            const trimmed = text.trim();
+            if (!trimmed) return;
+            store.set(taskPath(newId()), { text: trimmed.slice(0, MAX_TASK_LENGTH), completed: false, createdAt: now() });
+        }
+
+        function toggleTask(id) {
+            const task = tasks.find((t) => t.id === id);
+            if (!task) return;
+            const completed = !task.completed;
+            store.update(taskPath(id), { completed });
+            // Keyed by task id, so checking / unchecking never creates duplicate summary entries
+            const summaryEntry = `${SUMMARY_PATH}/${weekKey()}/completed/${id}`;
+            if (completed) store.set(summaryEntry, { text: task.text, at: now() });
+            else store.remove(summaryEntry);
+        }
+
+        function removeTask(id) {
+            store.remove(taskPath(id)); // the weekly summary keeps tasks that were already completed
+        }
+
+        taskInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                addTask(taskInput.value);
+                taskInput.value = "";
+            }
+        });
+
+        // Re-measure when the layout or web font changes how the text wraps
+        window.addEventListener("resize", autosizeAll);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(autosizeAll);
+    }
+
+    createChecklist(TASKS_PATH_Y, "taskInputY", "taskListY");
+    createChecklist(TASKS_PATH_R, "taskInputR", "taskListR");
 
 
     /* ===================== SYNCED WEEKLY SUMMARY ===================== */
