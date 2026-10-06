@@ -6,7 +6,7 @@
     --navy: #394d6c;
     --pink: #f0a8bb;
     --pink-dark: #c2718b;
-    --plum: #563a4c;
+    --rose: #b46c72;
 }
 
 * {
@@ -165,7 +165,7 @@ body {
 }
 
 .checklist-box.pink {
-    background-color: var(--plum);
+    background-color: var(--rose);
 }
 
 .checklist-box.pink .checklist-header {
