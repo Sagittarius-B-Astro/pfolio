@@ -26,7 +26,7 @@ body {
 
 .pomodoro-wrapper {
     width: 100%;
-    max-width: 900px;
+    max-width: 1200px;
 }
 
 .pomodoro-card {
@@ -99,8 +99,8 @@ body {
 .timer-box,
 .checklist-box {
     aspect-ratio: 1 / 1;
-    min-width: 0;   /* keep the two columns exactly equal whatever their contents */
-    min-height: 0;
+    min-width: 0px;
+    min-height: 0px;
 }
 
 .timer-display {
@@ -392,7 +392,7 @@ body {
         height: 340px;
     }
     .checklist-box {
-        height: 360px;
+        height: 420px;
     }
     .pomodoro-summary {
         width: 100%;
