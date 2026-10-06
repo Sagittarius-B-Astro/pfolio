@@ -4,6 +4,9 @@
     --cream: #fce7c8;
     --gold: #fada7a;
     --navy: #394d6c;
+    --pink: #f0a8bb;
+    --pink-dark: #c2718b;
+    --plum: #563a4c;
 }
 
 * {
@@ -159,6 +162,31 @@ body {
     font-weight: bold;
     color: var(--gold);
     margin-bottom: 14px;
+}
+
+.checklist-box.pink {
+    background-color: var(--plum);
+}
+
+.checklist-box.pink .checklist-header {
+    color: var(--pink);
+}
+
+.checklist-box.pink .task-input:focus {
+    box-shadow: 0 0 0 3px rgba(240, 168, 187, 0.5);
+}
+
+.checklist-box.pink .task-list::-webkit-scrollbar-thumb {
+    background-color: var(--pink);
+}
+
+.checklist-box.pink .task-check-btn:hover,
+.checklist-box.pink .task-item.completed .task-check-btn {
+    background-color: var(--pink-dark);
+}
+
+.checklist-box.pink .task-text::-webkit-scrollbar-thumb {
+    background-color: var(--pink);
 }
 
 .task-entry {
@@ -364,7 +392,7 @@ body {
         height: 340px;
     }
     .checklist-box {
-        height: 420px;
+        height: 360px;
     }
     .pomodoro-summary {
         width: 100%;
