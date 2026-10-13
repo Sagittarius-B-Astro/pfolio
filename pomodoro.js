@@ -147,14 +147,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const now = () => Date.now() + serverOffset;
 
     // Week identifier, e.g. "2026-W40" (weeks start on Monday, in the viewer's local time)
-    function weekKey() {
-        const d = new Date(now());
+    function weekKeyFor(dateMs) {
+        const d = new Date(dateMs);
         d.setHours(0, 0, 0, 0);
-        d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7)); // Thursday of this week
+        d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
         const week1 = new Date(d.getFullYear(), 0, 4);
         const week = 1 + Math.round(((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
         return `${d.getFullYear()}-W${String(week).padStart(2, "0")}`;
     }
+    function weekKey() { return weekKeyFor(now()); }
 
 
     /* ===================== SYNCED TIMER ===================== */
@@ -310,7 +311,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // One independent checklist: its own database path, its own input/list elements,
     // its own in-memory task array. Completions from either checklist still feed the
     // one shared weekly summary below.
-    function createChecklist(tasksPath, inputId, listId) {
+    function createChecklist(tasksPath, inputId, listId, person) {
+    // Defensive: if the call site forgot the 4th arg, derive from path.
+        if (person !== "me" && person !== "gf") {
+            person = (tasksPath === TASKS_PATH_R) ? "gf" : "me";
+            console.warn(`[checklist] defaulting person="${person}" for ${inputId}`);
+        }
         const taskInput = document.getElementById(inputId);
         const taskList = document.getElementById(listId);
         taskInput.maxLength = MAX_TASK_LENGTH;
@@ -406,10 +412,13 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!task) return;
             const completed = !task.completed;
             store.update(taskPath(id), { completed });
-            // Keyed by task id, so checking / unchecking never creates duplicate summary entries
+
             const summaryEntry = `${SUMMARY_PATH}/${weekKey()}/completed/${id}`;
-            if (completed) store.set(summaryEntry, { text: task.text, at: now() });
-            else store.remove(summaryEntry);
+            if (completed) {
+                store.set(summaryEntry, { text: task.text, at: now(), person });
+            } else {
+                store.remove(summaryEntry);
+            }
         }
 
         function removeTask(id) {
@@ -428,8 +437,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(autosizeAll);
     }
 
-    createChecklist(TASKS_PATH_Y, "taskInputY", "taskListY");
-    createChecklist(TASKS_PATH_R, "taskInputR", "taskListR");
+    createChecklist(TASKS_PATH_Y, "taskInputY", "taskListY", "Yejun");
+    createChecklist(TASKS_PATH_R, "taskInputR", "taskListR", "Anusri");
 
 
     /* ===================== SYNCED WEEKLY SUMMARY ===================== */
@@ -477,4 +486,394 @@ document.addEventListener("DOMContentLoaded", function () {
     function addFocusedMinutes(minutes) {
         store.transaction(`${SUMMARY_PATH}/${weekKey()}/minutes`, (current) => (Number(current) || 0) + minutes);
     }
+
+    /* ===================== COMPLETED TASKS JAR ===================== */
+
+    const jarPanelEl     = document.getElementById("jarPanel");
+    const jarWrapEl      = document.getElementById("jarWrap");
+    const jarSlipsEl     = document.getElementById("jarSlips");
+    const jarSpillEl     = document.getElementById("jarSpill");
+    const jarScatteredEl = document.getElementById("jarScattered");
+    const jarBlurEl      = document.getElementById("jarBlur");
+    const jarCounterEl   = document.getElementById("jarCounter");
+    const jarEmptyHintEl = document.getElementById("jarEmptyHint");
+    const jarEmptyBtn    = document.getElementById("jarEmptyBtn");
+    const jarListBtn     = document.getElementById("jarListBtn");
+    const jarWeeksEl     = document.getElementById("jarWeeks");
+    const jarWeeksListEl = document.getElementById("jarWeeksList");
+
+    const JAR_CAPACITY = 21;   // slips that fill the jar to the brim
+    const SLIP_W = 36;
+    const SLIP_H = 18;
+
+    let jarEmptied = false;
+    let activeUnfolded = null;
+    let jarSummary = {};
+    let scatteredTasks = [];
+
+    const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const jrand = (a, b) => Math.random() * (b - a) + a;
+
+    /* ---------- data helpers ---------- */
+
+    function getWeekCompleted() {
+        const week = jarSummary[weekKey()] || {};
+        return Object.entries(week.completed || {})
+            .filter(([, c]) => c && typeof c.text === "string")
+            .map(([id, c]) => ({
+                id,
+                text: c.text,
+                at: Number(c.at) || 0,
+                person: c.person === "gf" ? "gf" : "me"
+            }))
+            .sort((a, b) => a.at - b.at || a.id.localeCompare(b.id));
+    }
+
+    function weekLabelFromKey(key) {
+        const m = /^(\d{4})-W(\d{2})$/.exec(key);
+        if (!m) return key;
+        const year = Number(m[1]);
+        const week = Number(m[2]);
+        const jan4 = new Date(year, 0, 4);
+        const jan4Mon = (jan4.getDay() + 6) % 7;          // Mon = 0
+        const week1Mon = new Date(jan4);
+        week1Mon.setDate(jan4.getDate() - jan4Mon);
+        const mon = new Date(week1Mon);
+        mon.setDate(week1Mon.getDate() + (week - 1) * 7);
+        const sun = new Date(mon);
+        sun.setDate(mon.getDate() + 6);
+        const fmt = (d) => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        return `${fmt(mon)} – ${fmt(sun)}, ${mon.getFullYear()}`;
+    }
+
+    /* ---------- slip factory ---------- */
+
+    function buildSlipEl(task) {
+        const el = document.createElement("div");
+        el.className = "jar-slip";
+        el.dataset.person = task.person;
+        el.addEventListener("click", (e) => {
+            e.stopPropagation();
+            unfoldSlip(el, task);
+        });
+        return el;
+    }
+
+    /* ---------- jar rendering ---------- */
+
+    function renderJar() {
+        if (jarEmptied) return;
+        jarSlipsEl.innerHTML = "";
+        jarSpillEl.innerHTML = "";
+
+        const tasks = getWeekCompleted();
+        const count = tasks.length;
+        jarCounterEl.textContent = count + (count === 1 ? " task" : " tasks");
+        jarEmptyHintEl.classList.toggle("hidden", count > 0);
+
+        const layerW = jarSlipsEl.clientWidth || 155;
+        const layerH = jarSlipsEl.clientHeight || 165;
+
+        /* three centred columns inside the glass */
+        const cols = 3;
+        const gap = Math.min(12, Math.max(2, (layerW - cols * SLIP_W) / (cols - 1)));
+        const rowW = cols * SLIP_W + (cols - 1) * gap;
+        const startX = (layerW - rowW) / 2;
+        const rowGap = SLIP_H + 3;
+        const baseY = layerH - SLIP_H - 2;
+
+        tasks.slice(0, JAR_CAPACITY).forEach((task, i) => {
+            const el = buildSlipEl(task);
+            const r = Math.floor(i / cols);
+            const c = i % cols;
+            el.style.left = (startX + c * (SLIP_W + gap) + jrand(-2, 2)) + "px";
+            el.style.top  = (baseY - r * rowGap + jrand(-2, 2)) + "px";
+            el.style.setProperty("--rot", jrand(-16, 16) + "deg");
+            jarSlipsEl.appendChild(el);
+        });
+
+        /* extras spill around the rim, evenly distributed across the width */
+        const spilled = tasks.slice(JAR_CAPACITY, JAR_CAPACITY + 6);
+        const wrapW = jarSpillEl.clientWidth || 160;
+        const n = spilled.length;
+        if (n) {
+            const slot = wrapW / n;
+            spilled.forEach((task, k) => {
+                const el = buildSlipEl(task);
+                el.style.left = (slot * k + (slot - SLIP_W) / 2 + jrand(-3, 3)) + "px";
+                el.style.top  = jrand(8, 22) + "px";
+                el.style.setProperty("--rot", jrand(-55, 55) + "deg");
+                jarSpillEl.appendChild(el);
+            });
+        }
+    }
+
+    /* ---------- empty / restore ---------- */
+
+    function emptyJar() {
+        if (jarEmptied) return;
+        const tasks = getWeekCompleted();
+        if (!tasks.length) return;
+
+        jarEmptied = true;
+        closeUnfolded();
+        closeWeeks();
+        jarEmptyHintEl.classList.add("hidden");
+        jarWrapEl.classList.add("tilted");
+        jarEmptyBtn.title = "Back to jar";
+
+        setTimeout(() => {
+            jarWrapEl.classList.add("hidden");
+            jarScatteredEl.classList.add("active");
+            layoutScattered(tasks);
+        }, 520);
+    }
+
+    function layoutScattered(tasks) {
+        scatteredTasks = tasks;
+        jarScatteredEl.innerHTML = "";
+
+        const W = jarScatteredEl.clientWidth;
+        const H = jarScatteredEl.clientHeight;
+        const n = tasks.length;
+        if (!n || !W || !H) return;
+
+        const padX = 34, padY = 50;
+        const availW = Math.max(80, W - padX * 2);
+        const availH = Math.max(80, H - padY * 2);
+
+        const cellW = SLIP_W + 18;   // 18 px horizontal breathing room
+        const cellH = SLIP_H + 18;
+
+        const maxCols = Math.max(1, Math.floor(availW / cellW));
+        const maxRows = Math.max(1, Math.floor(availH / cellH));
+
+        let cols = Math.min(maxCols, n);
+        let rows = Math.ceil(n / cols);
+        while (rows > maxRows && cols < n) {
+            cols++;
+            rows = Math.ceil(n / cols);
+        }
+        cols = Math.min(cols, maxCols);
+        rows = Math.ceil(n / cols);
+
+        /* centre the whole grid both ways */
+        const gridH = rows * cellH;
+        const originY = (H - gridH) / 2;
+
+        tasks.forEach((task, i) => {
+            const r = Math.floor(i / cols);
+            const c = i % cols;
+            /* last row is centred on its own */
+            const itemsInRow = Math.min(cols, n - r * cols);
+            const rowX = (W - itemsInRow * cellW) / 2;
+
+            const x = rowX + c * cellW + (cellW - SLIP_W) / 2 + jrand(-3, 3);
+            const y = originY + r * cellH + (cellH - SLIP_H) / 2 + jrand(-3, 3);
+
+            const el = buildSlipEl(task);
+            el.style.left = x + "px";
+            el.style.top  = y + "px";
+            el.style.setProperty("--rot", jrand(-14, 14) + "deg");
+            jarScatteredEl.appendChild(el);
+        });
+    }
+
+    function restoreJar() {
+        if (!jarEmptied) return;
+        jarEmptied = false;
+        closeUnfolded();
+        jarScatteredEl.classList.remove("active");
+        jarScatteredEl.innerHTML = "";
+        scatteredTasks = [];
+        jarWrapEl.classList.remove("hidden", "tilted");
+        jarEmptyBtn.title = "Empty jar";
+        renderJar();
+    }
+
+    /* ---------- unfold / fold ---------- */
+
+    function unfoldSlip(slipEl, task) {
+        if (activeUnfolded) return;
+        closeWeeks();
+
+        const panelRect = jarPanelEl.getBoundingClientRect();
+        const slipRect  = slipEl.getBoundingClientRect();
+
+        /* offset from the panel centre to the slip centre, so the modal grows out of the slip */
+        const dx = (slipRect.left + slipRect.width / 2) - (panelRect.left + panelRect.width / 2);
+        const dy = (slipRect.top + slipRect.height / 2) - (panelRect.top + panelRect.height / 2);
+
+        const modal = document.createElement("div");
+        modal.className = "jar-slip unfolded";
+        modal.dataset.person = task.person;
+        modal.innerHTML =
+            `<div class="task-text">${escHtml(task.text)}</div>` +
+            `<div class="task-meta">${task.person === "gf" ? "Ri" : "Yejun"}</div>`;
+
+        modal.style.transform =
+            `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.15)`;
+        modal.style.opacity = "0.55";
+
+        jarPanelEl.appendChild(modal);
+        activeUnfolded = modal;
+        modal._sourceSlip = slipEl;
+        jarBlurEl.classList.add("active");
+
+        requestAnimationFrame(() => {
+            modal.style.transform = "translate(-50%, -50%) scale(1)";
+            modal.style.opacity = "1";
+        });
+
+        const onDocDown = (e) => {
+            if (modal.contains(e.target)) return;
+            closeUnfolded();
+        };
+        modal._onDocDown = onDocDown;
+        setTimeout(() => {
+            if (activeUnfolded === modal) document.addEventListener("pointerdown", onDocDown, true);
+        }, 150);
+    }
+
+    function closeUnfolded() {
+        if (!activeUnfolded) return;
+        const modal = activeUnfolded;
+        activeUnfolded = null;
+
+        if (modal._onDocDown) {
+            document.removeEventListener("pointerdown", modal._onDocDown, true);
+        }
+
+        /* shrink back toward the slip it came from */
+        const src = modal._sourceSlip;
+        if (src && src.isConnected) {
+            const panelRect = jarPanelEl.getBoundingClientRect();
+            const r = src.getBoundingClientRect();
+            const dx = (r.left + r.width / 2) - (panelRect.left + panelRect.width / 2);
+            const dy = (r.top + r.height / 2) - (panelRect.top + panelRect.height / 2);
+            modal.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.15)`;
+        } else {
+            modal.style.transform = "translate(-50%, -50%) scale(0.15)";
+        }
+        modal.style.opacity = "0";
+
+        setTimeout(() => {
+            if (modal.parentNode) modal.parentNode.removeChild(modal);
+            jarBlurEl.classList.remove("active");
+        }, 360);
+    }
+
+    /* ---------- weeks dropdown ---------- */
+
+    /* Anchor: Monday of ISO week 42 of 2026 (Sep 28 – Oct 4, 2026). */
+    const WEEKS_ANCHOR = "2026-09-28";
+
+    function allWeeksUpToNow() {
+        const anchor = new Date(WEEKS_ANCHOR + "T12:00:00");
+        const today  = new Date(now());
+        const keys = [];
+        const seen = new Set();
+        const cursor = new Date(anchor);
+        while (cursor <= today) {
+            const k = weekKeyFor(cursor.getTime());
+            if (!seen.has(k)) { seen.add(k); keys.push(k); }
+            cursor.setDate(cursor.getDate() + 7);
+        }
+        return keys.reverse();   // newest first
+    }
+
+    function renderWeeks() {
+        const allKeys = allWeeksUpToNow();
+        jarWeeksListEl.innerHTML = "";
+
+        allKeys.forEach((key) => {
+            const week  = jarSummary[key] || {};
+            const items = Object.values(week.completed || {})
+                .filter((c) => c && typeof c.text === "string")
+                .sort((a, b) => (Number(a.at) || 0) - (Number(b.at) || 0));
+
+            const section = document.createElement("div");
+            section.className = "jar-week";
+
+            const head = document.createElement("div");
+            head.className = "jar-week-head";
+            head.innerHTML =
+                `<span class="jar-week-label">Week of ${weekLabelFromKey(key)}</span>` +
+                `<span class="jar-week-count">${items.length} task${items.length === 1 ? "" : "s"}</span>`;
+            section.appendChild(head);
+
+            const list = document.createElement("div");
+            list.className = "jar-week-tasks";
+
+            if (!items.length) {
+                const empty = document.createElement("div");
+                empty.className = "jar-week-task empty";
+                empty.textContent = "No tasks completed";
+                list.appendChild(empty);
+            } else {
+                items.forEach((it) => {
+                    const row = document.createElement("div");
+                    row.className = "jar-week-task";
+                    row.dataset.person = it.person === "gf" ? "gf" : "me";
+                    row.innerHTML = `<span class="dot"></span><span>${escHtml(it.text)}</span>`;
+                    list.appendChild(row);
+                });
+            }
+
+            section.appendChild(list);
+            jarWeeksListEl.appendChild(section);
+        });
+    }
+
+    function openWeeks() {
+        renderWeeks();
+        jarWeeksEl.classList.add("open");
+        jarListBtn.classList.add("active");
+    }
+
+    function closeWeeks() {
+        jarWeeksEl.classList.remove("open");
+        jarListBtn.classList.remove("active");
+    }
+
+    /* ---------- wiring ---------- */
+
+    jarEmptyBtn.addEventListener("click", () => {
+        if (jarEmptied) restoreJar();
+        else emptyJar();
+    });
+
+    jarListBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (jarWeeksEl.classList.contains("open")) closeWeeks();
+        else openWeeks();
+    });
+
+    jarBlurEl.addEventListener("click", closeUnfolded);
+
+    /* click anywhere outside the dropdown closes it */
+    document.addEventListener("pointerdown", (e) => {
+        if (!jarWeeksEl.classList.contains("open")) return;
+        if (jarWeeksEl.contains(e.target)) return;
+        if (jarListBtn.contains(e.target)) return;
+        closeWeeks();
+    });
+
+    /* keep the layout correct if the panel changes size */
+    let jarResizeTimer = null;
+    window.addEventListener("resize", () => {
+        clearTimeout(jarResizeTimer);
+        jarResizeTimer = setTimeout(() => {
+            if (!jarEmptied) renderJar();
+            else if (jarScatteredEl.classList.contains("active")) layoutScattered(scatteredTasks);
+        }, 160);
+    });
+
+    /* re-render whenever the weekly summary changes (both checklists write here) */
+    store.subscribe(SUMMARY_PATH, (data) => {
+        jarSummary = data || {};
+        if (!jarEmptied) renderJar();
+        if (jarWeeksEl.classList.contains("open")) renderWeeks();
+    });
 });

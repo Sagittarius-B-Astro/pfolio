@@ -55,21 +55,51 @@
                 </div>
             </div>
 
-            <div class="pomodoro-summary">
-                <div class="summary-title">This Week</div>
-                <div class="summary-metrics">
-                    <div class="metric">
-                        <span class="metric-value" id="weekTime">0h 0m</span>
-                        <span class="metric-label">Time Focused</span>
+            <div class="pomodoro-bottom">
+                <div class="pomodoro-summary">
+                    <div class="summary-title">This Week</div>
+                    <div class="summary-metrics">
+                        <div class="metric">
+                            <span class="metric-value" id="weekTime">0h 0m</span>
+                            <span class="metric-label">Time Focused</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-value" id="weekCount">0</span>
+                            <span class="metric-label">Tasks Completed</span>
+                        </div>
                     </div>
-                    <div class="metric">
-                        <span class="metric-value" id="weekCount">0</span>
-                        <span class="metric-label">Tasks Completed</span>
+                    <div class="summary-list" id="summaryList"></div>
+                </div>
+
+                <div class="jar-panel" id="jarPanel">
+                    <div class="jar-counter" id="jarCounter">0 tasks</div>
+
+                    <button class="jar-btn jar-btn-top" id="jarListBtn" aria-label="View by week" title="View by week">
+                        <i class="fas fa-list"></i>
+                    </button>
+                    <button class="jar-btn jar-btn-bottom" id="jarEmptyBtn" aria-label="Empty jar" title="Empty jar">
+                        <i class="fas fa-eye"></i>
+                    </button>
+
+                    <div class="jar-wrap" id="jarWrap">
+                        <div class="jar-lid"></div>
+                        <div class="jar-neck"></div>
+                        <div class="jar-glass">
+                            <div class="jar-slips" id="jarSlips"></div>
+                        </div>
+                        <div class="jar-spill" id="jarSpill"></div>
+                    </div>
+
+                    <div class="jar-scattered" id="jarScattered"></div>
+                    <div class="jar-empty-hint" id="jarEmptyHint">complete a task to fill the jar</div>
+                    <div class="jar-blur" id="jarBlur"></div>
+
+                    <div class="jar-weeks" id="jarWeeks">
+                        <div class="jar-weeks-title">Completed by week</div>
+                        <div class="jar-weeks-list" id="jarWeeksList"></div>
                     </div>
                 </div>
-                <div class="summary-list" id="summaryList"></div>
             </div>
-
         </div>
     </div>
 

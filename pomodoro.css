@@ -307,7 +307,7 @@ body {
 /* ---------- Weekly summary ---------- */
 
 .pomodoro-summary {
-    width: 60%;
+    width: auto;
     background-color: rgba(0, 0, 0, 0.15);
     border: 2px solid var(--gold);
     border-radius: 10px;
@@ -346,7 +346,7 @@ body {
 }
 
 .summary-list {
-    max-height: 120px;
+    max-height: none;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -396,5 +396,444 @@ body {
     }
     .pomodoro-summary {
         width: 100%;
+    }
+}
+
+/* ============================================================
+   Bottom row: weekly summary + completed-tasks jar
+   ============================================================ */
+
+.pomodoro-bottom {
+    display: flex;
+    width: 100%;
+    gap: 30px;
+    align-items: stretch;  
+}
+
+.pomodoro-bottom .pomodoro-summary {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    display: flex;         
+    flex-direction: column; 
+}
+
+.pomodoro-summary .summary-list {
+    max-height: none;
+    flex: 1 1 0;
+    min-height: 0; 
+}
+
+/* ---------- Panel ---------- */
+
+.jar-panel {
+    position: relative;
+    flex: 0 0 360px;
+    aspect-ratio: 1.15 / 1;
+    border-radius: 10px;
+    border: 2px solid var(--gold);
+    background-color: rgba(0, 0, 0, 0.15);
+    color: var(--cream);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-start;
+}
+
+.jar-counter {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--gold);
+    letter-spacing: 0.3px;
+    z-index: 10;
+}
+
+.jar-btn {
+    position: absolute;
+    right: 14px;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 2px solid var(--gold);
+    background: var(--gold);
+    color: var(--sage-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 40;                /* above the weeks dropdown so it can close it */
+    transition: transform 0.15s ease, background-color 0.2s ease;
+}
+.jar-btn:hover { transform: scale(1.06); background: rgba(255, 255, 255, 0.9); }
+.jar-btn i { font-size: 15px; }
+.jar-btn-top    { top: 14px; }
+.jar-btn-bottom { bottom: 14px; }
+
+/* ---------- Jar (lid / neck / glass) ---------- */
+
+.jar-wrap {
+    position: relative;
+    width: 160px;
+    height: 200px;
+    transform-origin: 50% 88%;
+    transition: transform 0.55s cubic-bezier(.34, 1.56, .64, 1), opacity 0.35s ease;
+}
+.jar-wrap.tilted {
+    transform: rotate(-58deg) translate(10px, -6px);
+}
+.jar-wrap.hidden {
+    opacity: 0;
+    transform: scale(0.85) translateY(28px);
+    pointer-events: none;
+}
+
+/* The gold lid */
+.jar-lid {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 74px;
+    height: 16px;
+    border-radius: 7px 7px 3px 3px;
+    background: linear-gradient(180deg, var(--gold) 0%, #e2c163 100%);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.30),
+                inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    z-index: 4;
+}
+
+/* Glass neck between lid and body */
+.jar-neck {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 58px;
+    height: 16px;
+    border-radius: 4px 4px 0 0;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2.5px solid rgba(255, 255, 255, 0.55);
+    border-bottom: none;
+    z-index: 2;
+}
+
+/* The see-through body */
+.jar-glass {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 29px;
+    bottom: 0;
+    border-radius: 10px 10px 22px 22px;
+    border: 2.5px solid rgba(255, 255, 255, 0.55);
+    background: linear-gradient(
+        160deg,
+        rgba(255, 255, 255, 0.10) 0%,
+        rgba(255, 255, 255, 0.02) 55%,
+        rgba(255, 255, 255, 0.07) 100%
+    );
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.07),
+                0 6px 16px rgba(0, 0, 0, 0.20);
+    z-index: 1;
+}
+/* vertical shine strip */
+.jar-glass::before {
+    content: "";
+    position: absolute;
+    top: 16%;
+    left: 10px;
+    width: 6px;
+    height: 42%;
+    border-radius: 6px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.40), rgba(255, 255, 255, 0));
+    pointer-events: none;
+    z-index: 3;
+}
+/* diagonal glass sheen drawn ON TOP of the slips */
+.jar-glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.14) 0%,
+        rgba(255, 255, 255, 0) 45%,
+        rgba(255, 255, 255, 0.05) 100%
+    );
+    pointer-events: none;
+    z-index: 3;
+}
+
+.jar-slips {
+    position: absolute;
+    inset: 0;
+}
+
+/* Slips that have spilled over the rim live above the lid */
+.jar-spill {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 5;
+}
+.jar-spill .jar-slip { pointer-events: auto; }
+
+/* ---------- Folded slips ---------- */
+
+.jar-slip {
+    position: absolute;
+    width: 36px;
+    height: 18px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.30);
+    background: linear-gradient(
+        to bottom,
+        var(--slip-top) 0%,
+        var(--slip-top) 46%,
+        var(--slip-mid) 47%,
+        var(--slip-mid) 53%,
+        var(--slip-bottom) 54%,
+        var(--slip-bottom) 100%
+    );
+    transition: transform 0.16s ease-out, box-shadow 0.16s ease-out;
+    will-change: transform;
+}
+
+/* Person colours - literal hex so nothing can fail to resolve */
+.jar-slip[data-person="me"] {
+    --slip-top: #495b78;
+    --slip-mid: #2f3d52;
+    --slip-bottom: #5f7396;
+}
+.jar-slip[data-person="gf"] {
+    --slip-top: #ba787d;
+    --slip-mid: #8a5459;
+    --slip-bottom: #cf9499;
+}
+
+/* rotation lives in --rot, so :hover can add scale without fighting an inline transform */
+.jar-slip:not(.unfolded) {
+    transform: rotate(var(--rot, 0deg));
+}
+.jar-slip:not(.unfolded):hover {
+    transform: rotate(var(--rot, 0deg)) scale(1.06);
+    box-shadow: 2px 5px 12px rgba(0, 0, 0, 0.45);
+}
+
+/* ---------- Unfolded slip (modal) ---------- */
+
+.jar-slip.unfolded {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 270px;
+    max-width: calc(100% - 40px);
+    height: auto;              /* <-- the clipping bug */
+    padding: 18px 20px;
+    border-radius: 10px;
+    background: var(--cream);
+    border: 2px solid var(--gold);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+    cursor: default;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    transform: translate(-50%, -50%) scale(1);
+    transform-origin: 50% 50%;
+    transition: transform 0.42s cubic-bezier(.25, .8, .3, 1), opacity 0.28s ease;
+}
+.jar-slip.unfolded .task-text {
+    font-family: 'Baskervville', serif;
+    font-size: 16px;
+    line-height: 1.45;
+    color: #3a3226;
+    font-weight: bold;
+    word-break: break-word;
+    max-height: 40vh;
+    overflow-y: auto;
+}
+.jar-slip.unfolded .task-meta {
+    margin-top: 12px;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: #6b6156;
+    border-left: 3px solid #495b78;
+    padding-left: 8px;
+}
+.jar-slip.unfolded[data-person="gf"] .task-meta {
+    border-left-color: #ba787d;
+}
+
+/* ---------- Focus blur ---------- */
+
+.jar-blur {
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 26, 38, 0.28);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 100;
+}
+.jar-blur.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ---------- Scattered slips ---------- */
+
+.jar-scattered {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    display: none;
+}
+.jar-scattered.active { display: block; }
+.jar-scattered .jar-slip { pointer-events: auto; }
+.jar-scattered .jar-slip:not(.unfolded):hover { z-index: 60; }
+
+/* ---------- Empty hint ---------- */
+
+.jar-empty-hint {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 13px;
+    font-style: italic;
+    color: rgba(252, 231, 200, 0.55);
+    white-space: nowrap;
+    z-index: 4;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+.jar-empty-hint.hidden { opacity: 0; }
+
+/* ---------- Weeks dropdown ---------- */
+
+.jar-weeks {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    padding: 18px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(18, 24, 34, 0.97);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.jar-weeks.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.jar-weeks-title {
+    flex: 0 0 auto;
+    font-size: 15px;
+    font-weight: bold;
+    color: var(--gold);
+    letter-spacing: 0.4px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(250, 218, 122, 0.35);
+}
+
+/* fixed height + scrollbar */
+.jar-weeks-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-right: 6px;
+}
+.jar-weeks-list::-webkit-scrollbar { width: 7px; }
+.jar-weeks-list::-webkit-scrollbar-thumb {
+    background: var(--gold);
+    border-radius: 4px;
+}
+.jar-weeks-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+}
+
+.jar-week-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--gold);
+    letter-spacing: 0.3px;
+    margin-bottom: 6px;
+}
+.jar-week-count {
+    font-size: 11px;
+    color: rgba(252, 231, 200, 0.6);
+}
+.jar-week-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.jar-week-task {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    line-height: 1.3;
+    color: var(--cream);
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    padding: 5px 9px;
+    word-break: break-word;
+}
+.jar-week-task .dot {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #495b78;
+}
+.jar-week-task[data-person="gf"] .dot { background: #ba787d; }
+.jar-week-task.empty {
+    opacity: 0.5;
+    font-style: italic;
+    background: transparent;
+}
+.jar-weeks-empty {
+    font-size: 13px;
+    font-style: italic;
+    opacity: 0.6;
+    text-align: center;
+    padding: 12px 0;
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 700px) {
+    .pomodoro-bottom { flex-direction: column; }
+    .pomodoro-bottom .pomodoro-summary { width: 100%; }
+    .jar-panel {
+        flex: none;
+        width: 100%;
+        max-width: 420px;
+        align-self: center;
     }
 }
