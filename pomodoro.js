@@ -411,7 +411,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const task = tasks.find((t) => t.id === id);
             if (!task) return;
             const completed = !task.completed;
-            store.update(taskPath(id), { completed });
+            store.update(taskPath(id), { completed, completedAt: completed ? now() : null });
 
             const summaryEntry = `${SUMMARY_PATH}/${weekKey()}/completed/${id}`;
             if (completed) {
@@ -876,4 +876,50 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!jarEmptied) renderJar();
         if (jarWeeksEl.classList.contains("open")) renderWeeks();
     });
+
+    /* ===================== WEEKLY CLEANUP ===================== */
+    // Removes completed tasks from the checklists once their completion week has passed.
+    // Runs when the page loads (so it applies to existing completed tasks immediately)
+    // and every minute, so a page left open over Sunday night cleans itself up.
+
+    const sweepTasks = { [TASKS_PATH_Y]: null, [TASKS_PATH_R]: null };
+    let sweepSummary = {};
+    let sweepReady = false;
+
+    function completionWeekOf(id, task) {
+        if (task.completedAt) return weekKeyFor(Number(task.completedAt));
+        // Older tasks have no completedAt, so look them up in the weekly summary
+        for (const [wk, w] of Object.entries(sweepSummary)) {
+            if (w && w.completed && w.completed[id]) return wk;
+        }
+        return null;
+    }
+
+    function sweepCompleted() {
+        if (!sweepReady) return;
+        const current = weekKey();
+        Object.entries(sweepTasks).forEach(([path, tasks]) => {
+            if (!tasks) return;
+            Object.entries(tasks).forEach(([id, t]) => {
+                if (!t || !t.completed) return;
+                const wk = completionWeekOf(id, t);
+                if (wk === null || wk < current) store.remove(`${path}/${id}`);
+            });
+        });
+    }
+
+    [TASKS_PATH_Y, TASKS_PATH_R].forEach((path) => {
+        store.subscribe(path, (data) => {
+            sweepTasks[path] = data || {};
+            sweepCompleted();
+        });
+    });
+
+    store.subscribe(SUMMARY_PATH, (data) => {
+        sweepSummary = data || {};
+        sweepReady = true;
+        sweepCompleted();
+    });
+
+    setInterval(sweepCompleted, 60000);
 });
