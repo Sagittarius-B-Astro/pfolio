@@ -411,7 +411,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const task = tasks.find((t) => t.id === id);
             if (!task) return;
             const completed = !task.completed;
-            store.update(taskPath(id), { completed, completedAt: completed ? now() : null });
 
             const summaryEntry = `${SUMMARY_PATH}/${weekKey()}/completed/${id}`;
             if (completed) {
@@ -419,6 +418,8 @@ document.addEventListener("DOMContentLoaded", function () {
             } else {
                 store.remove(summaryEntry);
             }
+
+            store.update(taskPath(id), { completed, completedAt: completed ? now() : null });
         }
 
         function removeTask(id) {
@@ -903,7 +904,7 @@ document.addEventListener("DOMContentLoaded", function () {
             Object.entries(tasks).forEach(([id, t]) => {
                 if (!t || !t.completed) return;
                 const wk = completionWeekOf(id, t);
-                if (wk === null || wk < current) store.remove(`${path}/${id}`);
+                if (wk === null && wk < current) store.remove(`${path}/${id}`);
             });
         });
     }
