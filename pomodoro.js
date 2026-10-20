@@ -898,13 +898,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function sweepCompleted() {
         if (!sweepReady) return;
-        const current = weekKey();
+        const current = weekKeyFor(Date.now() + 7 * 86400000); //weekKey();
         Object.entries(sweepTasks).forEach(([path, tasks]) => {
             if (!tasks) return;
             Object.entries(tasks).forEach(([id, t]) => {
                 if (!t || !t.completed) return;
                 const wk = completionWeekOf(id, t);
-                if (wk === null && wk < current) store.remove(`${path}/${id}`);
+                if (wk !== null && wk < current) store.remove(`${path}/${id}`);
             });
         });
     }
