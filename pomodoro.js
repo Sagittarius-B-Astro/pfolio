@@ -898,7 +898,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function sweepCompleted() {
         if (!sweepReady) return;
-        const current = weekKeyFor(Date.now() + 7 * 86400000); //weekKey();
+        const current = weekKey();
         Object.entries(sweepTasks).forEach(([path, tasks]) => {
             if (!tasks) return;
             Object.entries(tasks).forEach(([id, t]) => {
