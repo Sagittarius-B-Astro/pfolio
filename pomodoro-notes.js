@@ -12,7 +12,7 @@
     // Firebase console can edit.
     const NAMES = { me: "Yejun", gf: "Ri" };
     const MESSAGES_PATH = "pomodoroMessages";   // database path: pomodoroMessages/<id> = {from, text, at}
-    const MAX_LENGTH = 1000;
+    const MAX_LENGTH = 1500;
     const LOCAL_KEY = "pomodoroLocalUser";
     const NEW = "__new__";                      // select value for the "New message" entry
 
