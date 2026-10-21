@@ -1,0 +1,154 @@
+/* pomodoro-notes.css - styles for the login gate, the top-right notes toolbar and the
+   View / Send message modals. Loaded AFTER pomodoro.css and reuses its colour variables
+   (--sage, --navy, --rose, --pink, --gold, --cream) and button classes. */
+
+[hidden] { display: none !important; }
+
+/* Hide the page until someone has logged in (pomodoro-notes.js toggles this class) */
+html.locked .pomodoro-wrapper { visibility: hidden; }
+.pomodoro-wrapper { padding-top: 22px; }
+
+/* ---------- Login ---------- */
+.auth-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--sage);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+}
+.auth-overlay.checking .auth-card { visibility: hidden; }
+.auth-card {
+    width: min(380px, 100%);
+    background: var(--navy); color: var(--cream);
+    border: 2px solid #000; border-radius: 10px;
+    padding: 30px;
+    display: flex; flex-direction: column; gap: 14px;
+}
+.auth-title {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    font-size: 36px; font-weight: bold; color: var(--gold);
+    margin-bottom: 6px;
+}
+.auth-error { min-height: 1.3em; text-align: center; font-size: 14px; color: #ffb3b3; }
+.auth-note  { text-align: center; font-size: 12px; opacity: 0.7; }
+.auth-submit { align-self: center; }
+
+/* ---------- Top-right toolbar ---------- */
+.notes-toolbar {
+    position: fixed; top: 14px; right: 14px; z-index: 800;
+    display: flex; gap: 10px;
+}
+.notes-btn {
+    width: 38px; height: 38px; border-radius: 10px;
+    border: 2px solid var(--gold); background: var(--gold); color: var(--sage-dark);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 15px;
+    transition: transform 0.15s ease, background-color 0.2s ease;
+}
+.notes-btn:hover { transform: scale(1.06); background: rgba(255, 255, 255, 0.9); }
+.notes-menu { position: relative; }
+.notes-dropdown {
+    position: absolute; top: calc(100% + 6px); right: 0; min-width: 170px;
+    background: var(--navy); border: 2px solid #000; border-radius: 10px;
+    padding: 6px; display: none; flex-direction: column; gap: 2px;
+}
+/* invisible bridge so the menu doesn't close while the mouse crosses the gap */
+.notes-dropdown::before { content: ""; position: absolute; left: 0; right: 0; top: -10px; height: 10px; }
+.notes-menu:hover .notes-dropdown,
+.notes-menu.open .notes-dropdown { display: flex; }
+.notes-dropdown button {
+    font-family: 'Baskervville', serif; font-size: 16px; font-weight: bold; text-align: left;
+    color: var(--cream); background: transparent; border: none; border-radius: 6px;
+    padding: 8px 12px; cursor: pointer;
+}
+.notes-dropdown button:hover { background: var(--gold); color: var(--sage-dark); }
+.notes-dropdown i { width: 22px; }
+
+/* ---------- Modals (same size for both users) ---------- */
+.note-overlay {
+    position: fixed; inset: 0; z-index: 900;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex; align-items: center; justify-content: center; padding: 12px;
+}
+/* Colours + font per user: outer = darker checklist shade, inner = lighter shade */
+.theme-gf {
+    --frame: #b46c72; --paper: #f4d6dc; --ink: #4a2a30; --accent: #a4506b;
+    --body-size: 23px; --label-size: 17px;
+    font-family: 'Cormorant Garamond', 'Baskervville', serif;
+}
+.theme-me {
+    --frame: #394d6c; --paper: #dfe6f1; --ink: #1f2b3d; --accent: #3f5a85;
+    --body-size: 14.5px; --label-size: 12px;
+    font-family: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+}
+.note-frame {
+    position: relative;
+    width: min(780px, 100%); height: min(520px, 90vh);
+    background: var(--frame);
+    border: 2px solid #000; border-radius: 10px;
+    padding: 34px;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.5);
+}
+.note-paper {
+    height: 100%;
+    background: var(--paper); color: var(--ink);
+    border-radius: 8px; padding: 32px;
+    display: flex; gap: 24px;
+}
+.note-close {
+    position: absolute; top: 5px; right: 8px; z-index: 5;
+    width: 26px; height: 26px; border: none; border-radius: 50%;
+    background: transparent; color: var(--paper); font-size: 18px; cursor: pointer;
+}
+.note-close:hover { background: rgba(255, 255, 255, 0.25); }
+
+.note-side { flex: 0 0 200px; display: flex; flex-direction: column; gap: 8px; }
+.note-label { font-size: var(--label-size); font-weight: 600; color: var(--accent); }
+.note-select {
+    width: 100%; padding: 8px; font-family: inherit; font-size: calc(var(--label-size) + 1px);
+    color: var(--ink); background: rgba(255, 255, 255, 0.7);
+    border: 1.5px solid var(--frame); border-radius: 6px;
+}
+.note-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.note-meta {
+    font-size: var(--label-size); color: var(--accent); font-weight: 600;
+    padding-bottom: 8px; margin-bottom: 12px;
+    border-bottom: 1.5px solid var(--frame);
+}
+.note-text {
+    flex: 1; min-height: 0; overflow-y: auto;
+    font-size: var(--body-size); line-height: 1.5;
+    white-space: pre-wrap; word-break: break-word;
+}
+.note-input {
+    flex: 1; min-height: 0; resize: none; padding: 12px;
+    font-family: inherit; font-size: var(--body-size); line-height: 1.5; color: var(--ink);
+    background: rgba(255, 255, 255, 0.6);
+    border: 1.5px solid var(--frame); border-radius: 8px;
+}
+.note-input:focus, .note-select:focus { outline: 3px solid rgba(0, 0, 0, 0.15); }
+.note-actions {
+    display: flex; justify-content: flex-end; align-items: center; gap: 12px;
+    margin-top: 12px; min-height: 50px;
+}
+.note-status { font-size: var(--label-size); color: var(--accent); }
+.note-send { background: var(--frame); border-color: var(--frame); color: #fff; }
+.note-send:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ---------- Border art (View modal only): corner bouquets drawn over the paper ---------- */
+.has-border::before, .has-border::after {
+    content: ""; position: absolute; z-index: 3; pointer-events: none;
+    background-repeat: no-repeat; background-size: contain;
+}
+.border-rose::before { top: 0; left: 0;   width: 135px; aspect-ratio: 210 / 213; background-image: url("borders/rose-tl.png"); }
+.border-rose::after  { bottom: 0; right: 0; width: 135px; aspect-ratio: 204 / 214; background-image: url("borders/rose-br.png"); }
+.border-fern::before { bottom: 0; left: 0;  width: 165px; aspect-ratio: 302 / 316; background-image: url("borders/fern-bl.png"); }
+.border-fern::after  { top: 0; right: 0;    width: 150px; aspect-ratio: 255 / 272; background-image: url("borders/fern-tr.png"); }
+
+@media (max-width: 640px) {
+    .note-frame { padding: 24px; height: min(600px, 92vh); }
+    .note-paper { flex-direction: column; padding: 34px 20px 20px; gap: 12px; }
+    .note-side { flex: none; }
+    .border-rose::before, .border-rose::after { width: 90px; }
+    .border-fern::before { width: 105px; }
+    .border-fern::after  { width: 95px; }
+}

@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
 
     /* ===================== CONFIG ===================== */
 
@@ -140,6 +140,10 @@ document.addEventListener("DOMContentLoaded", function () {
         console.warn("Firebase not configured - running in local-only mode (data is shared between tabs of this browser only).");
         store = createLocalStore();
     }
+
+    // Login gate (pomodoro-notes.js): nothing below runs - no database listeners, no timer -
+    // until one of the two allowed accounts has signed in.
+    const session = await window.PomodoroAuth.require(store);
 
     // Use the database server's clock so users with slightly-off computer clocks stay in sync
     let serverOffset = 0;
@@ -923,4 +927,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     setInterval(sweepCompleted, 60000);
+
+    /* ===================== NOTES (toolbar + View / Send Message) ===================== */
+    window.PomodoroNotes.init({ store, role: session.role, now });
 });
