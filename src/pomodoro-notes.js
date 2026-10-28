@@ -12,6 +12,7 @@
     // Firebase console can edit.
     const NAMES = { me: "Yejun", gf: "Ri" };
     const MESSAGES_PATH = "pomodoroMessages";   // database path: pomodoroMessages/<id> = {from, text, at}
+    const READ_PATH = "pomodoroRead";           // database path: pomodoroRead/<me|gf> = timestamp of the newest message that person has seen
     const MAX_LENGTH = 1500;
     const LOCAL_KEY = "pomodoroLocalUser";
     const NEW = "__new__";                      // select value for the "New message" entry
@@ -144,10 +145,15 @@
             noteBtn.setAttribute("aria-haspopup", "true");
             noteBtn.setAttribute("aria-expanded", "false");
             noteBtn.innerHTML = '<i class="fas fa-note-sticky"></i>';
+            const badge = el("span", "notes-badge");          // red dot on the note button
+            badge.hidden = true;
+            badge.setAttribute("aria-label", "Unread messages");
+            noteBtn.appendChild(badge);
             const dropdown = el("div", "notes-dropdown");
             dropdown.innerHTML =
-                '<button type="button" data-act="view"><i class="fas fa-envelope-open"></i>View Message</button>' +
+                '<button type="button" data-act="view"><i class="fas fa-envelope-open"></i>View Message<span class="unread-dot" hidden></span></button>' +
                 '<button type="button" data-act="send"><i class="fas fa-pen"></i>Send Message</button>';
+            const viewDot = dropdown.querySelector(".unread-dot");   // matching dot next to "View Message"
             menu.append(noteBtn, dropdown);
 
             const logoutBtn = el("button", "notes-btn");
@@ -172,12 +178,41 @@
             });
             logoutBtn.addEventListener("click", () => window.PomodoroAuth.signOut(store));
 
-            /* ----- messages from the database ----- */
+            /* ----- messages + read state from the database ----- */
+            let lastRead = 0;                                    // newest message from `other` that I've seen
+            let messagesLoaded = false, readLoaded = false;
+
+            // Show or hide the red dots. Waits for both subscriptions so it never flashes on page load.
+            function updateBadge() {
+                if (!messagesLoaded || !readLoaded) return;
+                const unread = messages.some((m) => m.from === other && m.at > lastRead);
+                badge.hidden = !unread;
+                viewDot.hidden = !unread;
+            }
+
+            // Called while the View modal is open: everything from the other person counts as seen.
+            function markRead() {
+                const newest = messages.reduce((t, m) => (m.from === other ? Math.max(t, m.at) : t), 0);
+                if (newest > lastRead) {
+                    lastRead = newest;
+                    store.set(READ_PATH + "/" + role, newest);
+                    updateBadge();
+                }
+            }
+
+            store.subscribe(READ_PATH + "/" + role, (val) => {
+                lastRead = Math.max(lastRead, Number(val) || 0);
+                readLoaded = true;
+                updateBadge();
+            });
+
             store.subscribe(MESSAGES_PATH, (data) => {
                 messages = Object.entries(data || {})
                     .filter(([, m]) => m && typeof m.text === "string")
                     .map(([id, m]) => ({ id, text: m.text, from: m.from === "gf" ? "gf" : "me", at: Number(m.at) || 0 }))
                     .sort((a, b) => b.at - a.at || b.id.localeCompare(a.id));
+                messagesLoaded = true;
+                updateBadge();
                 if (openModal) openModal.refresh();   // live-update an open modal
             });
 
@@ -228,6 +263,7 @@
                 // Rebuild the dropdown, keep the user's pick if still there, otherwise use the default
                 function refresh() {
                     const list = items();
+                    if (isView) markRead();   // opening (or live-updating) View marks messages as seen
                     const prev = select.value;
                     select.innerHTML = "";
                     if (!isView) select.add(new Option("✎ New message", NEW));
