@@ -45,6 +45,16 @@ html.locked .pomodoro-wrapper { visibility: hidden; }
     transition: transform 0.15s ease, background-color 0.2s ease;
 }
 .notes-btn:hover { transform: scale(1.06); background: rgba(255, 255, 255, 0.9); }
+.notes-btn { position: relative; }
+.notes-badge {
+    position: absolute; top: -5px; right: -5px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #e53935; border: 2px solid var(--sage);
+}
+.unread-dot {
+    display: inline-block; width: 8px; height: 8px; margin-left: 8px;
+    border-radius: 50%; background: #ff6b6b; vertical-align: middle;
+}
 .notes-menu { position: relative; }
 .notes-dropdown {
     position: absolute; top: calc(100% + 6px); right: 0; min-width: 170px;
@@ -139,10 +149,10 @@ html.locked .pomodoro-wrapper { visibility: hidden; }
     content: ""; position: absolute; z-index: 3; pointer-events: none;
     background-repeat: no-repeat; background-size: contain;
 }
-.border-rose::before { top: 0; left: 0;   width: 135px; aspect-ratio: 210 / 213; background-image: url("borders/rose-tl.png"); }
-.border-rose::after  { bottom: 0; right: 0; width: 135px; aspect-ratio: 204 / 214; background-image: url("borders/rose-br.png"); }
-.border-fern::before { bottom: 0; left: 0;  width: 165px; aspect-ratio: 302 / 316; background-image: url("borders/fern-bl.png"); }
-.border-fern::after  { top: 0; right: 0;    width: 150px; aspect-ratio: 255 / 272; background-image: url("borders/fern-tr.png"); }
+.border-rose::before { top: 0; left: 0;   width: 135px; aspect-ratio: 210 / 213; background-image: url("../imgs/rose-tl.png"); }
+.border-rose::after  { bottom: 0; right: 0; width: 135px; aspect-ratio: 204 / 214; background-image: url("../imgs/rose-br.png"); }
+.border-fern::before { bottom: 0; left: 0;  width: 165px; aspect-ratio: 302 / 316; background-image: url("../imgs/fern-bl.png"); }
+.border-fern::after  { top: 0; right: 0;    width: 150px; aspect-ratio: 255 / 272; background-image: url("../imgs/fern-tr.png"); }
 
 @media (max-width: 640px) {
     .note-frame { padding: 24px; height: min(600px, 92vh); }

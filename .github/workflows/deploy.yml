@@ -25,7 +25,7 @@ jobs:
             -e "s|__FIREBASE_DATABASE_URL__|${{ secrets.FIREBASE_DATABASE_URL }}|g" \
             -e "s|__FIREBASE_PROJECT_ID__|${{ secrets.FIREBASE_PROJECT_ID }}|g" \
             -e "s|__FIREBASE_APP_ID__|${{ secrets.FIREBASE_APP_ID }}|g" \
-            build/pomodoro.js
+            build/src/pomodoro.js
 
       - name: Deploy build folder to gh-pages
         uses: peaceiris/actions-gh-pages@v4
