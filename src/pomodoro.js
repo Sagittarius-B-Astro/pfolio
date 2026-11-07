@@ -11,7 +11,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         appId: "__FIREBASE_APP_ID__"
     };
 
-    const DURATION = 25 * 60;      // seconds
+    const WORK_DURATION = 25 * 60; // seconds - one focus session
+    const REST_DURATION = 5 * 60;  // seconds - rest that starts right after every focus session
+    const MAX_SESSIONS = 8;        // upper limit for the consecutive-sessions stepper
     const MAX_TASK_LINES = 3;      // a task box grows up to this many lines, then scrolls / shows a hover tooltip
     const MAX_TASK_LENGTH = 500;   // characters
 
@@ -183,22 +185,30 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.addEventListener("pointerdown", unlockAudio, { once: true });
     document.addEventListener("keydown", unlockAudio, { once: true });
 
-    function playBell() {
+    // kind "normal": the usual two-note ding (work or rest finished).
+    // kind "final":  a longer rising four-note chime meaning the whole run of consecutive sessions is over.
+    const BELL_NOTES = {
+        normal: { freqs: [880, 1320],            spacing: 0.15, tail: 1.2 },
+        final:  { freqs: [523, 659, 784, 1047],  spacing: 0.22, tail: 1.8 }
+    };
+
+    function playBell(kind = "normal") {
         if (!audioCtx) return;
         try {
+            const { freqs, spacing, tail } = BELL_NOTES[kind] || BELL_NOTES.normal;
             const t0 = audioCtx.currentTime;
-            [880, 1320].forEach((freq, i) => {
+            freqs.forEach((freq, i) => {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                osc.type = "sine";
+                osc.type = kind === "final" ? "triangle" : "sine";
                 osc.frequency.value = freq;
-                const start = t0 + i * 0.15;
+                const start = t0 + i * spacing;
                 gain.gain.setValueAtTime(0.0001, start);
                 gain.gain.exponentialRampToValueAtTime(0.3, start + 0.02);
-                gain.gain.exponentialRampToValueAtTime(0.0001, start + 1.2);
+                gain.gain.exponentialRampToValueAtTime(0.0001, start + tail);
                 osc.connect(gain).connect(audioCtx.destination);
                 osc.start(start);
-                osc.stop(start + 1.3);
+                osc.stop(start + tail + 0.1);
             });
         } catch (err) {
             console.error("Could not play the bell sound:", err);
@@ -208,12 +218,99 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     /* ===================== SYNCED TIMER ===================== */
 
-    const timerDisplay = document.getElementById("timerDisplay");    
+    const timerBox = document.getElementById("timerBox");
+    const timerDisplay = document.getElementById("timerDisplay");
+    const timerPhaseEl = document.getElementById("timerPhase");
+    const timerSubEl = document.getElementById("timerSub");
     const toggleBtn = document.getElementById("toggleBtn");
     const resetBtn = document.getElementById("resetBtn");
+    const sessionsMinus = document.getElementById("sessionsMinus");
+    const sessionsPlus = document.getElementById("sessionsPlus");
+    const sessionsCountEl = document.getElementById("sessionsCount");
+    const sessionTotalEl = document.getElementById("sessionTotal");
 
-    let remoteState = { running: false, endTime: null, remaining: DURATION };
-    let finishing = false; // true while a "timer hit zero" transaction is in flight
+    // pomodoroState in the database:
+    //   running       - is the countdown ticking?
+    //   endTime       - (server ms) when the current phase ends; only meaningful while running
+    //   remaining     - seconds left in the current phase while paused / idle
+    //   phase         - "work" | "rest"
+    //   sessionIndex  - which focus session of the run we are in (1-based)
+    //   totalSessions - how many consecutive sessions were configured (1 = a single session)
+    //   lastEvent     - { at, kind } written whenever a phase finishes naturally;
+    //                   kind "normal" = regular ding, "final" = whole run is over. Every open page
+    //                   plays the matching sound when it sees a new lastEvent.
+    // Older records without phase / sessionIndex / totalSessions are treated as a single work session.
+    const durationFor = (phase) => (phase === "rest" ? REST_DURATION : WORK_DURATION);
+
+    function normalizeState(data) {
+        const total = Math.min(MAX_SESSIONS, Math.max(1, Math.round(Number(data.totalSessions)) || 1));
+        const phase = data.phase === "rest" ? "rest" : "work";
+        const state = {
+            running: !!data.running,
+            endTime: data.endTime || null,
+            remaining: data.remaining ?? durationFor(phase),
+            phase,
+            sessionIndex: Math.min(total, Math.max(1, Math.round(Number(data.sessionIndex)) || 1)),
+            totalSessions: total,
+            lastEvent: null
+        };
+        if (data.lastEvent && typeof data.lastEvent.at === "number") state.lastEvent = data.lastEvent;
+        return state;
+    }
+
+    // A fresh, not-started run: session 1, work phase, full time on the clock
+    function idleState(totalSessions, lastEvent) {
+        const state = {
+            running: false, endTime: null, remaining: WORK_DURATION,
+            phase: "work", sessionIndex: 1, totalSessions: totalSessions || 1
+        };
+        if (lastEvent) state.lastEvent = lastEvent;
+        return state;
+    }
+
+    // The current state with some fields changed (never contains undefined - Firebase rejects it)
+    function stateWith(changes) {
+        return Object.assign({
+            running: remoteState.running,
+            endTime: remoteState.endTime,
+            remaining: remoteState.remaining,
+            phase: remoteState.phase,
+            sessionIndex: remoteState.sessionIndex,
+            totalSessions: remoteState.totalSessions
+        }, changes);
+    }
+
+    // The state to move to when the running phase hits zero:
+    //   work -> rest (auto-starts)
+    //   rest -> next work session (auto-starts), or back to idle when it was the last one
+    // The final rest of a multi-session run uses the "final" ding; everything else is "normal".
+    function stateAfterCompletion(current) {
+        const s = normalizeState(current);
+        // Chain phases off the previous end time so there's no drift; if the page was closed
+        // for a while (stale), start the next phase from now instead of replaying the backlog.
+        const anchor = now() - s.endTime < 3000 ? s.endTime : now();
+
+        if (s.phase === "work") {
+            return {
+                running: true, endTime: anchor + REST_DURATION * 1000, remaining: REST_DURATION,
+                phase: "rest", sessionIndex: s.sessionIndex, totalSessions: s.totalSessions,
+                lastEvent: { at: now(), kind: "normal" }
+            };
+        }
+        if (s.sessionIndex < s.totalSessions) {
+            return {
+                running: true, endTime: anchor + WORK_DURATION * 1000, remaining: WORK_DURATION,
+                phase: "work", sessionIndex: s.sessionIndex + 1, totalSessions: s.totalSessions,
+                lastEvent: { at: now(), kind: "normal" }
+            };
+        }
+        return idleState(s.totalSessions, { at: now(), kind: s.totalSessions > 1 ? "final" : "normal" });
+    }
+
+    let remoteState = idleState(1);
+    let finishing = false;      // true while a "phase hit zero" transaction is in flight
+    let eventsPrimed = false;   // the first snapshot only records the latest event; it never rings
+    let seenEventAt = null;
 
     function formatTime(totalSeconds) {
         const s = Math.max(0, Math.round(totalSeconds));
@@ -226,7 +323,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (remoteState.running && remoteState.endTime) {
             return Math.max(0, (remoteState.endTime - now()) / 1000);
         }
-        return remoteState.remaining ?? DURATION;
+        return remoteState.remaining ?? durationFor(remoteState.phase);
     }
 
     function renderTimer() {
@@ -243,32 +340,67 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         if (remoteState.running && left <= 0 && !finishing) {
             finishing = true;
-            // Every open page notices the timer hit zero, but the transaction only commits for the
+            const finishedPhase = remoteState.phase;
+            // Every open page notices the phase hit zero, but the transaction only commits for the
             // first one - so the focused time is counted once, not once per user.
             store.transaction(STATE_PATH, (current) => {
                 if (current === null) return current;
                 if (current.running && current.endTime && current.endTime <= now()) {
-                    return { running: false, endTime: null, remaining: 0 };
+                    return stateAfterCompletion(current);
                 }
                 return undefined; // someone else already handled it
             }).then((result) => {
-                if (result.committed) addFocusedMinutes(DURATION / 60);
+                // Only focus sessions count toward "Time Focused", not rests
+                if (result.committed && finishedPhase === "work") addFocusedMinutes(WORK_DURATION / 60);
             });
         }
     }
 
+    // Labels, rest colour theme, and the sessions stepper - redrawn whenever the shared state changes
+    function renderPhase() {
+        const s = remoteState;
+        const resting = s.phase === "rest";
+        timerBox.classList.toggle("resting", resting);
+        timerPhaseEl.textContent = resting ? "Rest" : "Focus";
+
+        if (resting) {
+            timerSubEl.textContent = s.totalSessions > 1
+                ? `Session ${s.sessionIndex} of ${s.totalSessions} done`
+                : "Time to rest";
+        } else {
+            timerSubEl.textContent = s.totalSessions > 1 ? `Session ${s.sessionIndex} of ${s.totalSessions}` : "";
+        }
+
+        sessionsCountEl.textContent = s.totalSessions;
+        const totalMin = s.totalSessions * (WORK_DURATION + REST_DURATION) / 60;
+        const label = totalMin >= 60 ? `${Math.floor(totalMin / 60)}h ${totalMin % 60}m` : `${totalMin}m`;
+        sessionTotalEl.textContent = `${s.totalSessions} × (25 + 5) = ${label}`;
+
+        // The count can only be changed on a fresh, not-started run (Reset to change it mid-run)
+        const editable = !s.running && s.phase === "work" && s.sessionIndex === 1 && s.remaining >= WORK_DURATION;
+        sessionsMinus.disabled = !editable || s.totalSessions <= 1;
+        sessionsPlus.disabled = !editable || s.totalSessions >= MAX_SESSIONS;
+    }
+
     store.subscribe(STATE_PATH, (data) => {
         if (!data) {
-            store.set(STATE_PATH, { running: false, endTime: null, remaining: DURATION });
+            store.set(STATE_PATH, idleState(1));
             return;
         }
-        const wasRunning = remoteState.running;
-        remoteState = data;
+        remoteState = normalizeState(data);
         finishing = false;
-        // Every open page (not just whichever one's transaction "won") sees this
-        // transition and rings its own bell - a real-finish, not a manual pause.
-        if (wasRunning && !data.running && (data.remaining || 0) <= 0) {
-            playBell();
+        renderPhase();
+
+        // Every open page rings its own bell for a naturally-finished phase (not for pause / reset,
+        // which never write a lastEvent). The first snapshot only records the latest event so
+        // reloading the page never replays an old ding.
+        const ev = remoteState.lastEvent;
+        if (!eventsPrimed) {
+            eventsPrimed = true;
+            seenEventAt = ev ? ev.at : null;
+        } else if (ev && ev.at !== seenEventAt) {
+            seenEventAt = ev.at;
+            if (now() - ev.at < 15000) playBell(ev.kind); // skip very stale events (e.g. tab was asleep)
         }
         renderTimer();
     });
@@ -278,17 +410,25 @@ document.addEventListener("DOMContentLoaded", async function () {
     toggleBtn.addEventListener("click", () => {
         unlockAudio();
         if (remoteState.running) {
-            store.set(STATE_PATH, { running: false, endTime: null, remaining: secondsLeft() });
+            store.set(STATE_PATH, stateWith({ running: false, endTime: null, remaining: secondsLeft() }));
         } else {
-            const left = remoteState.remaining || DURATION;
-            const remaining = left > 0 ? left : DURATION;
-            store.set(STATE_PATH, { running: true, endTime: now() + remaining * 1000, remaining });
+            const left = remoteState.remaining || 0;
+            const remaining = left > 0 ? left : durationFor(remoteState.phase);
+            store.set(STATE_PATH, stateWith({ running: true, endTime: now() + remaining * 1000, remaining }));
         }
     });
 
+    // Reset always goes back to the start of the run (session 1, focus) and keeps the configured count
     resetBtn.addEventListener("click", () => {
-        store.set(STATE_PATH, { running: false, endTime: null, remaining: DURATION });
+        store.set(STATE_PATH, idleState(remoteState.totalSessions));
     });
+
+    function changeSessions(delta) {
+        const next = Math.min(MAX_SESSIONS, Math.max(1, remoteState.totalSessions + delta));
+        if (next !== remoteState.totalSessions) store.update(STATE_PATH, { totalSessions: next });
+    }
+    sessionsMinus.addEventListener("click", () => changeSessions(-1));
+    sessionsPlus.addEventListener("click", () => changeSessions(1));
 
 
         /* ===================== SYNCED CHECKLISTS ===================== */
@@ -312,6 +452,62 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (clamped) el.title = el.value; else el.removeAttribute("title");
     }
 
+    /* ---------- priority popover (shared by every band / entry button) ---------- */
+    // One floating menu on <body>: position:fixed so the scrolling task list can't clip it.
+    const PRIORITIES = ["high", "medium", "low"];   // anything else (or missing) = unmarked / grey
+    const PRIORITY_RANK = { high: 0, medium: 1, low: 2 };
+    const PRIORITY_LABEL = { high: "High", medium: "Medium", low: "Low", none: "None" };
+
+    const priorityMenu = document.createElement("div");
+    priorityMenu.className = "priority-menu";
+    ["high", "medium", "low", "none"].forEach((key) => {
+        const opt = document.createElement("button");
+        opt.type = "button";
+        opt.className = "priority-option";
+        opt.dataset.value = key;
+        opt.innerHTML = `<span class="priority-swatch" data-priority="${key}"></span><span>${PRIORITY_LABEL[key]}</span>`;
+        opt.addEventListener("click", () => {
+            const pick = priorityMenuState && priorityMenuState.onPick;
+            closePriorityMenu();
+            if (pick) pick(key === "none" ? null : key);
+        });
+        priorityMenu.appendChild(opt);
+    });
+    document.body.appendChild(priorityMenu);
+
+    let priorityMenuState = null;   // { anchor, onPick } while the menu is open
+
+    function closePriorityMenu() {
+        priorityMenu.classList.remove("open");
+        priorityMenuState = null;
+    }
+
+    function openPriorityMenu(anchor, current, onPick) {
+        if (priorityMenuState && priorityMenuState.anchor === anchor) { closePriorityMenu(); return; } // click again = close
+        priorityMenuState = { anchor, onPick };
+        priorityMenu.querySelectorAll(".priority-option").forEach((o) =>
+            o.classList.toggle("selected", o.dataset.value === (current || "none")));
+        priorityMenu.classList.add("open");
+
+        // Right-align under the band; flip above it if there isn't room below
+        const r = anchor.getBoundingClientRect();
+        const w = priorityMenu.offsetWidth, h = priorityMenu.offsetHeight;
+        const left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8));
+        let top = r.bottom + 4;
+        if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 4);
+        priorityMenu.style.left = left + "px";
+        priorityMenu.style.top = top + "px";
+    }
+
+    document.addEventListener("pointerdown", (e) => {
+        if (!priorityMenuState) return;
+        if (priorityMenu.contains(e.target) || priorityMenuState.anchor.contains(e.target)) return;
+        closePriorityMenu();
+    });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePriorityMenu(); });
+    window.addEventListener("resize", closePriorityMenu);
+    window.addEventListener("scroll", closePriorityMenu, true);   // capture: also fires for the scrolling task list
+
     // One independent checklist: its own database path, its own input/list elements,
     // its own in-memory task array. Completions from either checklist still feed the
     // one shared weekly summary below.
@@ -325,8 +521,30 @@ document.addEventListener("DOMContentLoaded", async function () {
         const taskList = document.getElementById(listId);
         taskInput.maxLength = MAX_TASK_LENGTH;
 
-        let tasks = [];                 // sorted array built from the database
+        const box = taskInput.closest(".checklist-box");
+        const sortBtn = box.querySelector(".sort-btn");
+        const sortMenu = box.querySelector(".sort-menu");
+        const entryPriorityBtn = box.querySelector(".entry-priority-btn");
+
+        let tasks = [];                 // array built from the database (always oldest-first)
         const taskEls = new Map();      // task id -> its DOM element
+        let entryPriority = null;       // priority picked for the task being typed
+
+        // Sort choice is a personal view setting, so it's kept in this browser, not in the database
+        const SORT_KEY = `pomodoroSort:${tasksPath}`;
+        let sortMode = "date";
+        try { if (localStorage.getItem(SORT_KEY) === "priority") sortMode = "priority"; } catch { /* storage blocked */ }
+
+        const rankOf = (t) => (t.priority in PRIORITY_RANK ? PRIORITY_RANK[t.priority] : 3);
+
+        // The order tasks are shown in: by date (oldest first) or high -> medium -> low -> unmarked, then date
+        function sortedTasks() {
+            const list = tasks.slice();
+            if (sortMode === "priority") {
+                list.sort((a, b) => rankOf(a) - rankOf(b) || a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+            }
+            return list;
+        }
 
         const taskPath = (id) => `${tasksPath}/${id}`;
 
@@ -367,15 +585,25 @@ document.addEventListener("DOMContentLoaded", async function () {
                 store.update(taskPath(id), { text: value });
             });
 
+            // Priority band on the right end of the task: grey = unmarked, click to choose a colour
+            const band = document.createElement("button");
+            band.type = "button";
+            band.className = "task-priority-band";
+            band.addEventListener("click", () => {
+                const task = tasks.find((t) => t.id === id);
+                if (task) openPriorityMenu(band, task.priority, (p) => setPriority(id, p));
+            });
+
             item.appendChild(checkBtn);
             item.appendChild(cancelBtn);
             item.appendChild(text);
+            item.appendChild(band);
             return item;
         }
 
         function renderTasks() {
             const seen = new Set();
-            tasks.forEach((task, index) => {
+            sortedTasks().forEach((task, index) => {
                 seen.add(task.id);
                 let el = taskEls.get(task.id);
                 if (!el) {
@@ -383,6 +611,11 @@ document.addEventListener("DOMContentLoaded", async function () {
                     taskEls.set(task.id, el);
                 }
                 el.classList.toggle("completed", task.completed);
+                const prio = task.priority || "none";
+                el.dataset.priority = prio;
+                const band = el.querySelector(".task-priority-band");
+                band.title = `Priority: ${PRIORITY_LABEL[prio].toLowerCase()} (click to change)`;
+                band.setAttribute("aria-label", `Priority: ${PRIORITY_LABEL[prio].toLowerCase()}. Click to change`);
                 const text = el.querySelector(".task-text");
                 // Don't overwrite what someone is typing right now
                 if (document.activeElement !== text && text.value !== task.text) text.value = task.text;
@@ -400,7 +633,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         store.subscribe(tasksPath, (data) => {
             tasks = Object.entries(data || {})
                 .filter(([, t]) => t && typeof t.text === "string")
-                .map(([id, t]) => ({ id, text: t.text, completed: !!t.completed, createdAt: Number(t.createdAt) || 0 }))
+                .map(([id, t]) => ({
+                    id, text: t.text, completed: !!t.completed, createdAt: Number(t.createdAt) || 0,
+                    priority: PRIORITIES.includes(t.priority) ? t.priority : null   // missing = unmarked (older tasks)
+                }))
                 .sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
             renderTasks();
         });
@@ -408,8 +644,56 @@ document.addEventListener("DOMContentLoaded", async function () {
         function addTask(text) {
             const trimmed = text.trim();
             if (!trimmed) return;
-            store.set(taskPath(newId()), { text: trimmed.slice(0, MAX_TASK_LENGTH), completed: false, createdAt: now() });
+            const task = { text: trimmed.slice(0, MAX_TASK_LENGTH), completed: false, createdAt: now() };
+            if (entryPriority) task.priority = entryPriority;   // leave the field out entirely when unmarked
+            store.set(taskPath(newId()), task);
+            entryPriority = null;
+            paintEntryPriority();
         }
+
+        function setPriority(id, priority) {
+            // null deletes the field in the database, i.e. back to unmarked / grey
+            store.update(taskPath(id), { priority });
+        }
+
+        function paintEntryPriority() {
+            const key = entryPriority || "none";
+            entryPriorityBtn.dataset.priority = key;
+            entryPriorityBtn.title = `Priority: ${PRIORITY_LABEL[key].toLowerCase()} (click to change)`;
+        }
+        entryPriorityBtn.addEventListener("click", () => {
+            openPriorityMenu(entryPriorityBtn, entryPriority, (p) => { entryPriority = p; paintEntryPriority(); });
+        });
+        paintEntryPriority();
+
+        /* ----- sort dropdown (top-right of the checklist) ----- */
+        function paintSortMenu() {
+            sortMenu.querySelectorAll(".sort-option").forEach((o) => o.classList.toggle("active", o.dataset.sort === sortMode));
+        }
+        function setSortOpen(open) {
+            sortMenu.classList.toggle("open", open);
+            sortBtn.classList.toggle("active", open);
+        }
+        sortBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            setSortOpen(!sortMenu.classList.contains("open"));
+        });
+        sortMenu.querySelectorAll(".sort-option").forEach((o) => {
+            o.addEventListener("click", () => {
+                sortMode = o.dataset.sort;
+                try { localStorage.setItem(SORT_KEY, sortMode); } catch { /* storage blocked */ }
+                paintSortMenu();
+                setSortOpen(false);
+                renderTasks();
+            });
+        });
+        // click anywhere outside the dropdown closes it
+        document.addEventListener("pointerdown", (e) => {
+            if (!sortMenu.classList.contains("open")) return;
+            if (sortMenu.contains(e.target) || sortBtn.contains(e.target)) return;
+            setSortOpen(false);
+        });
+        paintSortMenu();
 
         function toggleTask(id) {
             const task = tasks.find((t) => t.id === id);

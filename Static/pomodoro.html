@@ -24,8 +24,22 @@
             </div>
 
             <div class="pomodoro-main">
-                <div class="timer-box">
+                <div class="timer-box" id="timerBox">
+                    <div class="timer-phase" id="timerPhase">Focus</div>
+                    <div class="timer-sub" id="timerSub"></div>
                     <div class="timer-display" id="timerDisplay">25:00</div>
+
+                    <!-- Consecutive-session configuration (shared between both users) -->
+                    <div class="session-config" id="sessionConfig">
+                        <div class="session-config-label">Consecutive sessions</div>
+                        <div class="session-stepper">
+                            <button id="sessionsMinus" class="stepper-btn" aria-label="Fewer sessions">&minus;</button>
+                            <span id="sessionsCount" class="stepper-count">1</span>
+                            <button id="sessionsPlus" class="stepper-btn" aria-label="More sessions">+</button>
+                        </div>
+                        <div class="session-total" id="sessionTotal"></div>
+                    </div>
+
                     <div class="timer-controls">
                         <div class="control-cell">
                             <button id="toggleBtn" class="btn control-btn">
@@ -41,17 +55,35 @@
                 </div>
 
                 <div class="checklist-box pink">
-                    <div class="checklist-header">Anusri's Checklist</div>
+                    <div class="checklist-header">
+                        <span>Anusri's Checklist</span>
+                        <button class="sort-btn" aria-label="Sort tasks" title="Sort tasks"><i class="fas fa-arrow-down-wide-short"></i></button>
+                        <div class="sort-menu">
+                            <div class="sort-menu-title">Sort by</div>
+                            <button class="sort-option" data-sort="date">Date added</button>
+                            <button class="sort-option" data-sort="priority">Priority</button>
+                        </div>
+                    </div>
                     <div class="task-entry">
                         <input type="text" id="taskInputR" class="form-control task-input" placeholder="enter your task">
+                        <button class="entry-priority-btn" data-priority="none" aria-label="Set priority for the new task" title="Priority: none"></button>
                     </div>
                     <div class="task-list" id="taskListR"></div>
                 </div>
 
                 <div class="checklist-box">
-                    <div class="checklist-header">Yejun's Checklist</div>
+                    <div class="checklist-header">
+                        <span>Yejun's Checklist</span>
+                        <button class="sort-btn" aria-label="Sort tasks" title="Sort tasks"><i class="fas fa-arrow-down-wide-short"></i></button>
+                        <div class="sort-menu">
+                            <div class="sort-menu-title">Sort by</div>
+                            <button class="sort-option" data-sort="date">Date added</button>
+                            <button class="sort-option" data-sort="priority">Priority</button>
+                        </div>
+                    </div>
                     <div class="task-entry">
                         <input type="text" id="taskInputY" class="form-control task-input" placeholder="enter your task">
+                        <button class="entry-priority-btn" data-priority="none" aria-label="Set priority for the new task" title="Priority: none"></button>
                     </div>
                     <div class="task-list" id="taskListY"></div>
                 </div>

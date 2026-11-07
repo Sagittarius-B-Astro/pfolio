@@ -26,7 +26,7 @@ body {
 
 .pomodoro-wrapper {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1400px;   /* wider page so the checklists have room */
 }
 
 .pomodoro-card {
@@ -80,11 +80,22 @@ body {
     display: flex;
     width: 100%;
     gap: 30px;
+    height: 640px;        /* taller boxes; every box in the row stretches to this height */
+}
+
+/* Thin timer, wide checklists (flex ratio 0.6 : 1.2 : 1.2) */
+.timer-box {
+    flex: 0.6 1 0;
+    transition: background-color 0.9s ease;
+}
+
+.checklist-box {
+    flex: 1.2 1 0;
+    position: relative;
 }
 
 .timer-box,
 .checklist-box {
-    flex: 1 1 0;
     border-radius: 10px;
     border: 2px solid black;
     background-color: var(--navy);
@@ -94,11 +105,10 @@ body {
     flex-direction: column;
 }
 
-/* Both boxes are squares of the same width, so the checklist can never grow taller
-   than the timer box - a long task list scrolls inside .task-list instead. */
+/* The row has a fixed height, so a checklist can never grow taller than the timer box -
+   a long task list scrolls inside .task-list instead. */
 .timer-box,
 .checklist-box {
-    aspect-ratio: 1 / 1;
     min-width: 0px;
     min-height: 0px;
 }
@@ -114,8 +124,11 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
+/* Buttons are stacked because the timer box is thin */
 .timer-controls {
     display: flex;
+    flex-direction: column;
+    gap: 12px;
     width: 100%;
 }
 
@@ -128,6 +141,7 @@ body {
 
 .control-btn {
     min-width: 110px;
+    width: 100%;
     height: 50px;
     border-radius: 25px;
     border: 2px solid var(--gold);
@@ -157,6 +171,7 @@ body {
 /* ---------- Checklist ---------- */
 
 .checklist-header {
+    position: relative;   /* anchors the sort button + sort menu */
     text-align: center;
     font-size: 26px;
     font-weight: bold;
@@ -190,7 +205,16 @@ body {
 }
 
 .task-entry {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
     margin-bottom: 14px;
+}
+
+.task-entry .task-input {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
 }
 
 .task-input {
@@ -241,6 +265,7 @@ body {
     border-radius: 8px;
     padding: 8px 10px;
     flex-shrink: 0;
+    overflow: hidden;     /* clips the priority band to the rounded corners */
 }
 
 .task-item.completed .task-text {
@@ -378,21 +403,28 @@ body {
 
 /* ---------- Responsive ---------- */
 
-@media (max-width: 700px) {
+/* Narrow screens: the three boxes stack instead of sitting in a row */
+@media (max-width: 1000px) {
     .pomodoro-main {
         flex-direction: column;
+        height: auto;
     }
     .timer-box,
     .checklist-box {
         flex: none;          /* stacked in a column: use the explicit heights below */
         width: 100%;
-        aspect-ratio: auto;
     }
     .timer-box {
-        height: 340px;
+        min-height: 460px;
     }
     .checklist-box {
-        height: 420px;
+        height: 520px;
+    }
+}
+
+@media (max-width: 700px) {
+    .pomodoro-summary {
+        width: 100%;
     }
     .pomodoro-summary {
         width: 100%;
@@ -837,3 +869,259 @@ body {
         align-self: center;
     }
 }
+
+/* ============================================================
+   Timer phases, consecutive-session config
+   ============================================================ */
+
+.timer-phase {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--gold);
+    transition: color 0.9s ease;
+}
+
+.timer-sub {
+    min-height: 20px;        /* keeps the layout still when the sub-label is empty */
+    text-align: center;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+/* Rest phase: the whole box shifts to a cooler teal so it is obvious it's break time */
+.timer-box.resting {
+    background-color: #2a7b8a;
+}
+.timer-box.resting .timer-phase,
+.timer-box.resting .timer-display {
+    color: #d6f3f6;
+}
+
+.timer-display {
+    transition: color 0.9s ease;
+}
+
+.session-config {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 18px;
+    padding: 10px 8px;
+    border: 1px solid rgba(250, 218, 122, 0.35);
+    border-radius: 10px;
+}
+
+.timer-box.resting .session-config {
+    border-color: rgba(214, 243, 246, 0.4);
+}
+
+.session-config-label {
+    font-size: 13px;
+    letter-spacing: 0.4px;
+    opacity: 0.85;
+}
+
+.session-stepper {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.stepper-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    background: transparent;
+    color: var(--gold);
+    font-size: 18px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+.stepper-btn:hover:not(:disabled) {
+    background: var(--gold);
+    color: var(--sage-dark);
+}
+.stepper-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.stepper-count {
+    min-width: 24px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+}
+
+.session-total {
+    font-size: 12px;
+    opacity: 0.75;
+    text-align: center;
+}
+
+
+/* ============================================================
+   Task priority (band on the right end of each task)
+   ============================================================ */
+
+/* Colour tokens: any element carrying data-priority gets --prio (children inherit it) */
+[data-priority="high"]   { --prio: rgba(226, 72, 72, 0.72); }
+[data-priority="medium"] { --prio: rgba(243, 201, 63, 0.72); }
+[data-priority="low"]    { --prio: rgba(88, 176, 96, 0.72); }
+[data-priority="none"]   { --prio: rgba(150, 150, 150, 0.45); }
+
+.task-priority-band {
+    flex: 0 0 auto;
+    align-self: stretch;
+    width: 16px;
+    margin: -8px -10px -8px 4px;   /* bleeds to the right/top/bottom edges of the task */
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: var(--prio, rgba(150, 150, 150, 0.45));
+    cursor: pointer;
+    transition: filter 0.15s ease;
+}
+.task-priority-band:hover { filter: brightness(1.25); }
+
+.entry-priority-btn {
+    flex: 0 0 22px;
+    border: none;
+    border-radius: 6px;
+    padding: 0;
+    background: var(--prio, rgba(150, 150, 150, 0.45));
+    cursor: pointer;
+    transition: filter 0.15s ease;
+}
+.entry-priority-btn:hover { filter: brightness(1.25); }
+
+/* Shared popover used by both the task bands and the entry buttons (appended to <body>) */
+.priority-menu {
+    position: fixed;
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 130px;
+    padding: 6px;
+    background: rgba(18, 24, 34, 0.97);
+    border: 1px solid rgba(250, 218, 122, 0.35);
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+.priority-menu.open { display: flex; }
+
+.priority-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 6px 8px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--cream);
+    font-family: 'Baskervville', serif;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+}
+.priority-option:hover { background: rgba(255, 255, 255, 0.1); }
+.priority-option.selected { color: var(--gold); font-weight: bold; }
+
+.priority-swatch {
+    flex: 0 0 auto;
+    width: 12px;
+    height: 18px;
+    border-radius: 3px;
+    background: var(--prio);
+}
+
+
+/* ============================================================
+   Checklist sort dropdown (top-right of each checklist)
+   ============================================================ */
+
+.sort-btn {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 2px solid var(--gold);
+    background: var(--gold);
+    color: var(--sage-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.sort-btn:hover,
+.sort-btn.active { background: rgba(255, 255, 255, 0.9); }
+.sort-btn i { font-size: 14px; }
+
+.sort-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 30;
+    width: 170px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+    background: rgba(18, 24, 34, 0.97);
+    border: 1px solid rgba(250, 218, 122, 0.35);
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-6px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.sort-menu.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.sort-menu-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--gold);
+    letter-spacing: 0.4px;
+    padding-bottom: 6px;
+    margin-bottom: 2px;
+    border-bottom: 1px solid rgba(250, 218, 122, 0.35);
+}
+
+.sort-option {
+    padding: 6px 8px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--cream);
+    font-family: 'Baskervville', serif;
+    font-size: 15px;
+    font-weight: normal;
+    text-align: left;
+    cursor: pointer;
+}
+.sort-option:hover { background: rgba(255, 255, 255, 0.1); }
+.sort-option.active { color: var(--gold); font-weight: bold; }
+.sort-option.active::after { content: " \2713"; }
