@@ -255,6 +255,9 @@ document.addEventListener("DOMContentLoaded", async function () {
             lastEvent: null
         };
         if (data.lastEvent && typeof data.lastEvent.at === "number") state.lastEvent = data.lastEvent;
+        // The old timer saved remaining: 0 when a session finished. Treat a stopped timer with
+        // nothing left as a fresh full phase so it counts as "not started" (and Play restarts it).
+        if (!state.running && !(state.remaining > 0)) state.remaining = durationFor(phase);
         return state;
     }
 
@@ -329,6 +332,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     function renderTimer() {
         const left = secondsLeft();
         timerDisplay.textContent = formatTime(left);
+        renderFinish();
 
         const runningKey = remoteState.running ? "running" : "paused";
         if (toggleBtn.dataset.state !== runningKey) {
@@ -356,6 +360,25 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
+    // When the whole run will be over if it runs without interruption: time left in the current
+    // phase + the rest that follows a focus phase + every remaining (focus + rest) session.
+    // Idle: that's "if you press Play now". Paused: "if you resume now". Running: the real end time.
+    function expectedFinishMs() {
+        const s = remoteState;
+        const later = (s.totalSessions - s.sessionIndex) * (WORK_DURATION + REST_DURATION)
+            + (s.phase === "work" ? REST_DURATION : 0);
+        return now() + (secondsLeft() + later) * 1000;
+    }
+
+    function renderFinish() {
+        const end = new Date(expectedFinishMs());
+        const time = end.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        const sameDay = end.toDateString() === new Date(now()).toDateString();
+        const day = sameDay ? "" : end.toLocaleDateString([], { weekday: "short" }) + " ";
+        const text = `Expected finish: ${day}${time}`;
+        if (sessionTotalEl.textContent !== text) sessionTotalEl.textContent = text;
+    }
+
     // Labels, rest colour theme, and the sessions stepper - redrawn whenever the shared state changes
     function renderPhase() {
         const s = remoteState;
@@ -372,14 +395,14 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
 
         sessionsCountEl.textContent = s.totalSessions;
-        const totalMin = s.totalSessions * (WORK_DURATION + REST_DURATION) / 60;
-        const label = totalMin >= 60 ? `${Math.floor(totalMin / 60)}h ${totalMin % 60}m` : `${totalMin}m`;
-        sessionTotalEl.textContent = `${s.totalSessions} × (25 + 5) = ${label}`;
+        renderFinish();
 
         // The count can only be changed on a fresh, not-started run (Reset to change it mid-run)
         const editable = !s.running && s.phase === "work" && s.sessionIndex === 1 && s.remaining >= WORK_DURATION;
         sessionsMinus.disabled = !editable || s.totalSessions <= 1;
         sessionsPlus.disabled = !editable || s.totalSessions >= MAX_SESSIONS;
+        const lockedHint = editable ? "" : "Press Reset to change the number of sessions";
+        sessionsMinus.title = sessionsPlus.title = lockedHint;
     }
 
     store.subscribe(STATE_PATH, (data) => {
